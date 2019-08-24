@@ -8,6 +8,7 @@
 #define ENABLE_DHT22   1 //enables the dht22
 #define ENABLE_LCD     1 //enables the lcd
 #define ENABLE_DS3231  1 //enables the ds3231
+#define ENABLE_PWRDET  1 //enables the system to detect when the mains power is on and off
 
 /*Definitions for both the DHT22 Sensors */
 #define ENABLE_DHT1 1 //enables the first dht22 sensor
@@ -24,6 +25,11 @@
 /*Definitions for the DS3231 RTC*/
 #define SET_PARAMETERS  0 // when set to 1, one can set the day,date and time
 #define DS3231_TESTING  1 // when set to 1, it enables the ds3231TestFunction()
+
+#if ENABLE_PWRDET
+  const byte interruptPin_Off = 2; // interrupt pin for when mains power goes off
+  const byte interruptPin_On = 3; // interrupt pin for when mains power goes on
+#endif
 
 #if ENABLE_DS3231
   DS3231  rtc(SDA, SCL);
@@ -117,6 +123,17 @@ void setup(void)
    #endif
    #if ENABLE_DS3231
     rtc.begin(); // Initialize the rtc object
+   #endif
+   #if ENABLE_PWRDET
+    pinMode(interruptPin_Off, INPUT_PULLUP);
+    pinMode(interruptPin_On, INPUT_PULLUP);
+    /*
+      @brief  Power Blackout Detection Unit
+        When the mainssupply is on the signal level is HIGH. 
+        When there is no mains supply, the signal level is LOW
+    */
+    attachInterrupt(digitalPinToInterrupt(interruptPin_Off), powerOff , FALLING); // this triggers the interrupt on the falling edge of the signal
+    attachInterrupt(digitalPinToInterrupt(interruptPin_On), powerOn , RISING);    // this triggers the interrupt on the rising edge of the signal.
    #endif
 }
 
@@ -235,5 +252,18 @@ void loop(void)
       lcd.print(rtc.getDateStr());
     #endif
     delay(1000);
+  }
+#endif
+
+#if ENABLE_PWRDET
+  void powerOff(void)
+  {
+    //TO DO: ADD FUNCTION TO CALL THE FARMER WHEN POWER IS OFF AND SEND SMS
+    Serial.println("Power off interrupt triggered"); 
+  }
+  void powerOn(void)
+  {
+    //TO DO: ADD FUNCTION TO CALL THE FARMER WHEN POWER IS ON AND SEND SMS
+    Serial.println("Power on interrupt triggered");
   }
 #endif
