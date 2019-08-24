@@ -3,17 +3,30 @@
 
 #if ENABLE_DHT22
   #include <DHT.h>
-  
-  //Constants
-  #define DHTPIN 7     // what pin we're connected to
+
+  #define ENABLE_DHT1 1 //enables the first dht22 sensor
+  #define ENABLE_DHT2 1 //enables the second dht22 sensor
   #define DHTTYPE DHT22   // DHT 22  (AM2302)
-  DHT dht(DHTPIN, DHTTYPE); //// Initialize DHT sensor for normal 16mhz Arduino
   
-  
-  //Variables
-  int chk;
-  float hum;  //Stores humidity value
-  float temp; //Stores temperature value
+  #if ENABLE_DHT1
+    //Constants
+    #define DHTPIN_1 7     //pin for the first dht22 sensor
+    DHT dht_1(DHTPIN_1, DHTTYPE); //// Initialize first DHT sensor for normal 16mhz Arduino
+
+    //Variables
+    int chk_1;
+    float hum_1;  //Stores humidity value
+    float temp_1; //Stores temperature value
+  #endif
+
+  #if ENABLE_DHT2
+   #define DHTPIN_2 8     //pin for the second dht22 sensor
+   DHT dht_2(DHTPIN_2, DHTTYPE); //// Initialize second DHT sensor for normal 16mhz Arduino
+    //Variables
+    int chk_2;
+    float hum_2;  //Stores humidity value
+    float temp_2; //Stores temperature value
+  #endif
 #endif   
 
 #if ENABLE_DS18B20
@@ -76,7 +89,13 @@ void setup(void)
    #endif
 
    #if ENABLE_DHT22
-    dht.begin();
+    #if ENABLE_DHT1
+      dht_1.begin();
+    #endif
+
+    #if ENABLE_DHT2
+      dht_2.begin();
+    #endif
    #endif
 }
 
@@ -142,16 +161,32 @@ void loop(void)
 #if ENABLE_DHT22
   void dht22Sensor(void)
   {
-      delay(2000);
-      //Read data and store it to variables hum and temp
-      hum = dht.readHumidity();
-      temp= dht.readTemperature();
-      //Print temp and humidity values to serial monitor
-      Serial.print("Humidity: ");
-      Serial.print(hum);
-      Serial.print(" %, Temp: ");
-      Serial.print(temp);
-      Serial.println(" Celsius");
-      delay(10000); //Delay 2 sec.
+      #if ENABLE_DHT1
+        delay(2000);
+        //Read data and store it to variables hum and temp
+        hum_1 = dht_1.readHumidity();
+        temp_1= dht_1.readTemperature();
+        //Print temp and humidity values to serial monitor
+        Serial.print("Humidity_1: ");
+        Serial.print(hum_1);
+        Serial.print(" %, Temp_1: ");
+        Serial.print(temp_1);
+        Serial.println(" Celsius");
+        delay(10000); //Delay 2 sec.
+      #endif
+      
+      #if ENABLE_DHT2
+        delay(2000);
+        //Read data and store it to variables hum and temp
+        hum_2 = dht_2.readHumidity();
+        temp_2= dht_2.readTemperature();
+        //Print temp and humidity values to serial monitor
+        Serial.print("Humidity_2: ");
+        Serial.print(hum_2);
+        Serial.print(" %, Temp_2: ");
+        Serial.print(temp_2);
+        Serial.println(" Celsius");
+        delay(10000); //Delay 2 sec.
+      #endif
   }
 #endif
