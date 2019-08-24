@@ -4,11 +4,12 @@
 #include <DHT.h>
 #include <DS3231.h>
 
+/*Definitions for enabling code*/
 #define ENABLE_DS18B20 1 //enables the DS18B20
-#define ENABLE_DHT22   1 //enables the dht22
-#define ENABLE_LCD     1 //enables the lcd
-#define ENABLE_DS3231  1 //enables the ds3231
-#define ENABLE_PWRDET  1 //enables the system to detect when the mains power is on and off
+#define ENABLE_DHT22   0 //enables the dht22
+#define ENABLE_LCD     0 //enables the lcd
+#define ENABLE_DS3231  0 //enables the ds3231
+#define ENABLE_PWRDET  0 //enables the system to detect when the mains power is on and off
 
 /*Definitions for both the DHT22 Sensors */
 #define ENABLE_DHT1 1 //enables the first dht22 sensor
@@ -229,30 +230,32 @@ void loop(void)
   }
 #endif
 
-#if DS3231_TESTING
-  void ds3231TestFunction(void)
-  {
-    Serial.print(rtc.getDOWStr());
-    Serial.print(" ");
-    
-    // Send date
-    Serial.print(rtc.getDateStr());
-    Serial.print(" -- ");
-    // Send time
-    Serial.println(rtc.getTimeStr());
-    
-    // Wait one second before repeating
-    #if ENABLE_LCD
-      lcd.setCursor(0,0);
-      lcd.print("Time:  ");
-      lcd.print(rtc.getTimeStr());
-     
-      lcd.setCursor(0,1);
-      lcd.print("Date: ");
-      lcd.print(rtc.getDateStr());
-    #endif
-    delay(1000);
-  }
+#if ENABLE_DS3231
+  #if DS3231_TESTING
+    void ds3231TestFunction(void)
+    {
+      Serial.print(rtc.getDOWStr());
+      Serial.print(" ");
+      
+      // Send date
+      Serial.print(rtc.getDateStr());
+      Serial.print(" -- ");
+      // Send time
+      Serial.println(rtc.getTimeStr());
+      
+      // Wait one second before repeating
+      #if ENABLE_LCD
+        lcd.setCursor(0,0);
+        lcd.print("Time:  ");
+        lcd.print(rtc.getTimeStr());
+       
+        lcd.setCursor(0,1);
+        lcd.print("Date: ");
+        lcd.print(rtc.getDateStr());
+      #endif
+      delay(1000);
+    }
+  #endif
 #endif
 
 #if ENABLE_PWRDET
