@@ -2,10 +2,12 @@
 #include <DallasTemperature.h>
 #include <LiquidCrystal.h>
 #include <DHT.h>
+#include <DS3231.h>
 
 #define ENABLE_DS18B20 1 //enables the DS18B20
 #define ENABLE_DHT22   1 //enables the dht22
 #define ENABLE_LCD     1 //enables the lcd
+#define ENABLE_DS3231  1 //enables the ds3231
 
 /*Definitions for both the DHT22 Sensors */
 #define ENABLE_DHT1 1 //enables the first dht22 sensor
@@ -18,7 +20,15 @@
 #define ONE_WIRE_BUS 2  // Data wire is plugged into port 2 on the Arduino
 #define ENABLE_DREAD 1 //enables temperature data reading.
 #define ENABLE_AREAD 0 //enables device address reading 
-  
+
+/*Definitions for the DS3231 RTC*/
+#define SET_PARAMETERS  0 // when set to 1, one can set the day,date and time
+#define DS3231_TESTING  1 // when set to 1, it enables the ds3231TestFunction()
+
+#if ENABLE_DS3231
+  DS3231  rtc(SDA, SCL);
+#endif
+ 
 #if ENABLE_LCD
   // initialize the library by associating any needed LCD interface pin
   // with the arduino pin number it is connected to
@@ -69,6 +79,10 @@
 void setup(void)
 {
   Serial.begin(9600);
+  #if ENABLE_LCD
+    // set up the LCD's number of columns and rows:
+    lcd.begin(20, 4);
+  #endif
   #if ENABLE_DS18B20
     sensors.begin();
     #if ENABLE_AREAD
@@ -101,9 +115,8 @@ void setup(void)
       dht_2.begin();
     #endif
    #endif
-   #if ENABLE_LCD
-     // set up the LCD's number of columns and rows:
-     lcd.begin(20, 4);
+   #if ENABLE_DS3231
+    rtc.begin(); // Initialize the rtc object
    #endif
 }
 
@@ -196,5 +209,31 @@ void loop(void)
         Serial.println(" Celsius");
         delay(10000); //Delay 2 sec.
       #endif
+  }
+#endif
+
+#if DS3231_TESTING
+  void ds3231TestFunction(void)
+  {
+    Serial.print(rtc.getDOWStr());
+    Serial.print(" ");
+    
+    // Send date
+    Serial.print(rtc.getDateStr());
+    Serial.print(" -- ");
+    // Send time
+    Serial.println(rtc.getTimeStr());
+    
+    // Wait one second before repeating
+    #if ENABLE_LCD
+      lcd.setCursor(0,0);
+      lcd.print("Time:  ");
+      lcd.print(rtc.getTimeStr());
+     
+      lcd.setCursor(0,1);
+      lcd.print("Date: ");
+      lcd.print(rtc.getDateStr());
+    #endif
+    delay(1000);
   }
 #endif
