@@ -1,4 +1,20 @@
 #define ENABLE_DS18B20 0 //enables the DS18B20
+#define ENABLE_DHT22   1 //enables the dht22
+
+#if ENABLE_DHT22
+  #include <DHT.h>
+  
+  //Constants
+  #define DHTPIN 7     // what pin we're connected to
+  #define DHTTYPE DHT22   // DHT 22  (AM2302)
+  DHT dht(DHTPIN, DHTTYPE); //// Initialize DHT sensor for normal 16mhz Arduino
+  
+  
+  //Variables
+  int chk;
+  float hum;  //Stores humidity value
+  float temp; //Stores temperature value
+#endif   
 
 #if ENABLE_DS18B20
   #include <OneWire.h>
@@ -56,19 +72,27 @@ void setup(void)
         sensors.getAddress(Thermometer, i);
         printAddress(Thermometer);
       }
-     #endif
     #endif
+   #endif
+
+   #if ENABLE_DHT22
+    dht.begin();
+   #endif
 }
 
 void loop(void)
 {
   #if ENABLE_DS18B20
-    ds18b20Function(void);
-  #endif  
+    ds18b20Sensor();
+  #endif 
+
+  #if ENABLE_DHT22
+    dht22Sensor();
+  #endif 
 }
 
 #if ENABLE_DS18B20
-  void ds18b20Function(void)
+  void ds18b20Sensor(void)
   {
     #if ENABLE_DREAD
       sensors.requestTemperatures();
@@ -113,4 +137,21 @@ void loop(void)
       Serial.println("");
     }
   #endif
+#endif
+
+#if ENABLE_DHT22
+  void dht22Sensor(void)
+  {
+      delay(2000);
+      //Read data and store it to variables hum and temp
+      hum = dht.readHumidity();
+      temp= dht.readTemperature();
+      //Print temp and humidity values to serial monitor
+      Serial.print("Humidity: ");
+      Serial.print(hum);
+      Serial.print(" %, Temp: ");
+      Serial.print(temp);
+      Serial.println(" Celsius");
+      delay(10000); //Delay 2 sec.
+  }
 #endif
