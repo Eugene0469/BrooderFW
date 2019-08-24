@@ -4,22 +4,22 @@
 #include <DHT.h>
 #include <DS3231.h>
 
-/*Definitions for enabling code*/
-#define ENABLE_DS18B20 1 //enables the DS18B20
+
+#define ENABLE_DS18B20 0 //enables the DS18B20
 #define ENABLE_DHT22   0 //enables the dht22
-#define ENABLE_LCD     0 //enables the lcd
-#define ENABLE_DS3231  0 //enables the ds3231
+#define ENABLE_LCD     1 //enables the lcd
+#define ENABLE_DS3231  1 //enables the ds3231
 #define ENABLE_PWRDET  0 //enables the system to detect when the mains power is on and off
 
 /*Definitions for both the DHT22 Sensors */
 #define ENABLE_DHT1 1 //enables the first dht22 sensor
 #define ENABLE_DHT2 1 //enables the second dht22 sensor
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
-#define DHTPIN_1 7     //pin for the first dht22 sensor
-#define DHTPIN_2 8     //pin for the second dht22 sensor
+#define DHTPIN_1 8     //pin for the first dht22 sensor
+#define DHTPIN_2 9     //pin for the second dht22 sensor
 
 /*Definitions for all the DS18B20 Sensors */ 
-#define ONE_WIRE_BUS 2  // Data wire is plugged into port 2 on the Arduino
+#define ONE_WIRE_BUS 2 // Data wire is plugged into port 2 on the Arduino
 #define ENABLE_DREAD 1 //enables temperature data reading.
 #define ENABLE_AREAD 0 //enables device address reading 
 
@@ -39,7 +39,7 @@
 #if ENABLE_LCD
   // initialize the library by associating any needed LCD interface pin
   // with the arduino pin number it is connected to
-  const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+   const int rs = 22, en = 23, d4 = 24, d5 = 25, d6 = 26, d7 = 27;
   LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #endif
 
@@ -77,9 +77,12 @@
   
   #if ENABLE_DREAD
     // Addresses of 3 DS18B20s.Replace with own addresses
-    uint8_t sensor1[8] = { 0x28, 0xEE, 0xD5, 0x64, 0x1A, 0x16, 0x02, 0xEC };
-    uint8_t sensor2[8] = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7C, 0x2F, 0x27 };
-    uint8_t sensor3[8] = { 0x28, 0x61, 0x64, 0x12, 0x3F, 0xFD, 0x80, 0xC6 };
+    uint8_t sensor1[8] = { 0x28, 0x51, 0x7C, 0x77, 0x91, 0x10, 0x02, 0xB6 };
+    uint8_t sensor2[8] = { 0x28, 0x4B, 0xCA, 0x77, 0x91, 0x11, 0x02, 0x35 };
+    uint8_t sensor3[8] = { 0x28, 0xBD, 0x98, 0x77, 0x91, 0x11, 0x02, 0xE3 };
+    uint8_t sensor4[8] = { 0x28, 0x0B, 0x56, 0x77, 0x91, 0x10, 0x02, 0x12 };
+
+    float tempC;
   #endif
 #endif
 
@@ -124,6 +127,13 @@ void setup(void)
    #endif
    #if ENABLE_DS3231
     rtc.begin(); // Initialize the rtc object
+    #if SET_PARAMETERS
+      // The following lines can be uncommented to set the date and time
+      rtc.setDOW(SATURDAY);     // Set Day-of-Week to SUNDAY
+      rtc.setTime(19, 34, 50);     // Set the time to 12:00:00 (24hr format)
+      rtc.setDate(24, 8, 2019);   // Set the date to January 1st, 2014
+      Serial.println("RTC Configuration Successful");
+    #endif
    #endif
    #if ENABLE_PWRDET
     pinMode(interruptPin_Off, INPUT_PULLUP);
@@ -147,6 +157,13 @@ void loop(void)
   #if ENABLE_DHT22
     dht22Sensor();
   #endif 
+
+  #if ENABLE_DS3231
+    #if DS3231_TESTING
+      ds3231TestFunction();
+    #endif
+  #endif
+  
 }
 
 #if ENABLE_DS18B20
@@ -157,29 +174,63 @@ void loop(void)
       
       Serial.print("Sensor 1: ");
       printTemperature(sensor1);
+      #if ENABLE_LCD
+       lcd.setCursor(0,0);
+       lcd.print("Sensor 1: ");
+       printTemperatureLCD();
+      #endif
       
       Serial.print("Sensor 2: ");
       printTemperature(sensor2);
+      #if ENABLE_LCD
+       lcd.setCursor(0,1);
+       lcd.print("Sensor 2: ");
+       printTemperatureLCD();
+      #endif
       
       Serial.print("Sensor 3: ");
       printTemperature(sensor3);
+      #if ENABLE_LCD
+        lcd.setCursor(0,2);
+        lcd.print("Sensor 3: ");
+        printTemperatureLCD();
+      #endif
+
+      Serial.print("Sensor 4: ");
+      printTemperature(sensor4);
+      #if ENABLE_LCD
+       lcd.setCursor(0,3);
+       lcd.print("Sensor 4: ");
+       printTemperatureLCD();
+      #endif
       
       Serial.println();
-      delay(1000);
+      delay(5000);
+      #if ENABLE_LCD
+//        lcd.clear();
+      #endif
     #endif 
   }
   
   #if ENABLE_DREAD
     void printTemperature(DeviceAddress deviceAddress)
     {
-      float tempC = sensors.getTempC(deviceAddress);
+      tempC = sensors.getTempC(deviceAddress);
       Serial.print(tempC);
       Serial.print((char)176);
-      Serial.print("C  |  ");
-      Serial.print(DallasTemperature::toFahrenheit(tempC));
-      Serial.print((char)176);
-      Serial.println("F");
+      Serial.println("C");
+//      Serial.print(DallasTemperature::toFahrenheit(tempC));
+//      Serial.print((char)176);
+//      Serial.println("F");
     }
+    #if ENABLE_LCD
+      void printTemperatureLCD(void)
+      {
+        lcd.print(tempC);
+        lcd.print((char)176);
+        lcd.print("C");
+      }
+    #endif
   #endif
   
   #if ENABLE_AREAD
@@ -211,7 +262,14 @@ void loop(void)
         Serial.print(" %, Temp_1: ");
         Serial.print(temp_1);
         Serial.println(" Celsius");
-        delay(10000); //Delay 2 sec.
+
+        #if ENABLE_LCD
+          lcd.setCursor(0,0);
+          lcd.print("Humidity_1: ");
+          printTemperature(hum_1);
+          lcd.print("%, Temp_1: ");
+          printTemperature(temp_1);
+        #endif
       #endif
       
       #if ENABLE_DHT2
@@ -225,7 +283,17 @@ void loop(void)
         Serial.print(" %, Temp_2: ");
         Serial.print(temp_2);
         Serial.println(" Celsius");
-        delay(10000); //Delay 2 sec.
+        #if ENABLE_LCD
+          lcd.setCursor(0,1);
+          lcd.print("Humidity_2: ");
+          printTemperature(hum_2);
+          lcd.print("%, Temp_2: ");
+          printTemperature(temp_2);
+        #endif        
+      #endif
+      delay(10000); //Delay 2 sec.
+      #if ENABLE_LCD
+        lcd.clear();
       #endif
   }
 #endif
@@ -234,14 +302,18 @@ void loop(void)
   #if DS3231_TESTING
     void ds3231TestFunction(void)
     {
+      // Send Day-of-Week
       Serial.print(rtc.getDOWStr());
       Serial.print(" ");
       
       // Send date
       Serial.print(rtc.getDateStr());
       Serial.print(" -- ");
+    
       // Send time
       Serial.println(rtc.getTimeStr());
+      
+    
       
       // Wait one second before repeating
       #if ENABLE_LCD
