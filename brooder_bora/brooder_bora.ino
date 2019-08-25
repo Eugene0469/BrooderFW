@@ -5,10 +5,10 @@
 #include <DS3231.h>
 
 
-#define ENABLE_DS18B20 1 //enables the DS18B20
-#define ENABLE_DHT22   1 //enables the dht22
-#define ENABLE_LCD     1 //enables the lcd
-#define ENABLE_DS3231  1 //enables the ds3231
+#define ENABLE_DS18B20 0 //enables the DS18B20
+#define ENABLE_DHT22   0 //enables the dht22
+#define ENABLE_LCD     0 //enables the lcd
+#define ENABLE_DS3231  0 //enables the ds3231
 #define ENABLE_PWRDET  1 //enables the system to detect when the mains power is on and off
 
 /*Definitions for both the DHT22 Sensors */
@@ -432,6 +432,7 @@ void loop(void)
         prevState = currState;
       }
     }
+    delay(1000);
   }
 
 #endif
