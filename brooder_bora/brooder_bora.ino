@@ -28,8 +28,9 @@
 #define DS3231_TESTING  0 // when set to 1, it enables the ds3231TestFunction()
 
 #if ENABLE_PWRDET
-  const byte interruptPin_Off = 2; // interrupt pin for when mains power goes off
-  const byte interruptPin_On = 3; // interrupt pin for when mains power goes on
+  const byte powerPin = 2; // interrupt pin for when mains power goes off
+  int prevState;
+  int currState;
 #endif
 
 #if ENABLE_DS3231
@@ -82,7 +83,6 @@
     DeviceAddress Thermometer;
     int deviceCount = 0;
   #endif
-  
   #if ENABLE_DREAD
     // Addresses of 3 DS18B20s.Replace with own addresses
     uint8_t sensor1[8] = { 0x28, 0x51, 0x7C, 0x77, 0x91, 0x10, 0x02, 0xB6 };
@@ -146,15 +146,8 @@ void setup(void)
     #endif
    #endif
    #if ENABLE_PWRDET
-    pinMode(interruptPin_Off, INPUT_PULLUP);
-    pinMode(interruptPin_On, INPUT_PULLUP);
-    /*
-      @brief  Power Blackout Detection Unit
-        When the mainssupply is on the signal level is HIGH. 
-        When there is no mains supply, the signal level is LOW
-    */
-    attachInterrupt(digitalPinToInterrupt(interruptPin_Off), powerOff , FALLING); // this triggers the interrupt on the falling edge of the signal
-    attachInterrupt(digitalPinToInterrupt(interruptPin_Off), powerOn , RISING);    // this triggers the interrupt on the rising edge of the signal.
+    pinMode(powerPin, INPUT_PULLUP);
+    prevState = digitalRead(powerPin);
    #endif
 }
 
@@ -175,6 +168,9 @@ void loop(void)
     #if DS3231_TESTING
       ds3231TestFunction();
     #endif
+  #endif
+  #if ENABLE_PWRDET
+    powerDetection();
   #endif
   
 }
@@ -416,16 +412,26 @@ void loop(void)
 #endif
 
 #if ENABLE_PWRDET
-  void powerOff(void)
+  void powerDetection(void)
   {
     //TO DO: ADD FUNCTION TO CALL THE FARMER WHEN POWER IS OFF AND SEND SMS
-    Serial.println("Power off interrupt triggered");
-    Serial.println(digitalRead(interruptPin_Off)); 
+    currState = digitalRead(powerPin);
+    if(currState == LOW)
+    {
+      if(currState != prevState)
+      {
+       Serial.println("Power OFF");
+       prevState = currState;  
+      }
+    } 
+    else if (currState == HIGH)
+    {
+      if(currState != prevState)
+      {
+        Serial.println("Power ON");
+        prevState = currState;
+      }
+    }
   }
-  void powerOn(void)
-  {
-    //TO DO: ADD FUNCTION TO CALL THE FARMER WHEN POWER IS ON AND SEND SMS
-    Serial.println("Power on interrupt triggered");
-    Serial.println(digitalRead(interruptPin_Off));
-  }
+
 #endif
