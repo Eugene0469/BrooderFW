@@ -7,9 +7,9 @@
 
 #define ENABLE_DS18B20 0 //enables the DS18B20
 #define ENABLE_DHT22   0 //enables the dht22
-#define ENABLE_LCD     1 //enables the lcd
-#define ENABLE_DS3231  1 //enables the ds3231
-#define ENABLE_PWRDET  0 //enables the system to detect when the mains power is on and off
+#define ENABLE_LCD     0 //enables the lcd
+#define ENABLE_DS3231  0 //enables the ds3231
+#define ENABLE_PWRDET  1 //enables the system to detect when the mains power is on and off
 
 /*Definitions for both the DHT22 Sensors */
 #define ENABLE_DHT1 1 //enables the first dht22 sensor
@@ -19,13 +19,13 @@
 #define DHTPIN_2 9     //pin for the second dht22 sensor
 
 /*Definitions for all the DS18B20 Sensors */ 
-#define ONE_WIRE_BUS 2 // Data wire is plugged into port 2 on the Arduino
+#define ONE_WIRE_BUS 7 // Data wire is plugged into port 2 on the Arduino
 #define ENABLE_DREAD 1 //enables temperature data reading.
 #define ENABLE_AREAD 0 //enables device address reading 
 
 /*Definitions for the DS3231 RTC*/
 #define SET_PARAMETERS  0 // when set to 1, one can set the day,date and time
-#define DS3231_TESTING  1 // when set to 1, it enables the ds3231TestFunction()
+#define DS3231_TESTING  0 // when set to 1, it enables the ds3231TestFunction()
 
 #if ENABLE_PWRDET
   const byte interruptPin_Off = 2; // interrupt pin for when mains power goes off
@@ -34,6 +34,16 @@
 
 #if ENABLE_DS3231
   DS3231  rtc(SDA, SCL);
+  int Hor;
+  int Min;
+  int Sec;
+  int Month;
+  int Mwaka;
+  int Siku;
+  Time t;
+  int Count=1;
+  int TempOn=32;
+  int TempOff=36;
 #endif
  
 #if ENABLE_LCD
@@ -144,7 +154,7 @@ void setup(void)
         When there is no mains supply, the signal level is LOW
     */
     attachInterrupt(digitalPinToInterrupt(interruptPin_Off), powerOff , FALLING); // this triggers the interrupt on the falling edge of the signal
-    attachInterrupt(digitalPinToInterrupt(interruptPin_On), powerOn , RISING);    // this triggers the interrupt on the rising edge of the signal.
+    attachInterrupt(digitalPinToInterrupt(interruptPin_Off), powerOn , RISING);    // this triggers the interrupt on the rising edge of the signal.
    #endif
 }
 
@@ -152,6 +162,7 @@ void loop(void)
 {
   #if ENABLE_DS18B20
     ds18b20Sensor();
+    regulate();
   #endif 
 
   #if ENABLE_DHT22
@@ -159,6 +170,8 @@ void loop(void)
   #endif 
 
   #if ENABLE_DS3231
+  getTimeDate();
+  detReference();
     #if DS3231_TESTING
       ds3231TestFunction();
     #endif
@@ -206,9 +219,7 @@ void loop(void)
       
       Serial.println();
       delay(5000);
-      #if ENABLE_LCD
-//        lcd.clear();
-      #endif
+
     #endif 
   }
   
@@ -231,6 +242,19 @@ void loop(void)
         lcd.print("C");
       }
     #endif
+  void regulate()
+  {
+    if(sensors.getTempCByIndex(0)<TempOn)
+    {
+//      digitalWrite(heater,HIGH);
+//      digitalWrite(13,HIGH);
+    }
+    else if(sensors.getTempCByIndex(0)>TempOff)
+    {
+//      digitalWrite(heater,LOW);
+//      digitalWrite(13,LOW);
+    } 
+  }    
   #endif
   
   #if ENABLE_AREAD
@@ -299,6 +323,61 @@ void loop(void)
 #endif
 
 #if ENABLE_DS3231
+  void getTimeDate()
+  { 
+    t= rtc.getTime();
+    Hor=t.hour;
+    Min=t.min;
+    Sec=t.sec;
+    Month=t.mon;
+    Mwaka= t.year;
+    Siku=t.date;
+    // Send Day-of-Week
+    Serial.print(rtc.getDOWStr());
+    Serial.print(" ");
+    
+    //Print date
+    Serial.print(rtc.getDateStr());
+    Serial.print(" -- ");
+    //Print time
+    Serial.println(rtc.getTimeStr());
+  }
+  void detReference()
+  {
+  
+     if(Siku==24 && Hor==21 && Min==05 && Count==1)
+     {
+      TempOn=TempOn-3;
+      TempOff=TempOff-3;
+      Serial.println(TempOn);
+      Serial.println(TempOff);
+      Count=2;
+     }
+    if(Siku==24 && Hor==21 && Min==07 && Count==2)
+    {
+      TempOn=TempOn-3;
+      TempOff=TempOff-3;
+      Serial.println(TempOn);
+      Serial.println(TempOff);
+      Count=3;
+    }
+    if(Siku==24 && Hor==21 && Min==10 &&Count==3)
+    {
+      TempOn=TempOn-3;
+      TempOff=TempOff-3;
+      Serial.println(TempOn);
+      Serial.println(TempOff);
+      Count=4;
+    }
+    if(Siku==24 && Hor==21 && Min==11 &&Count==4 )
+    {
+      TempOn=TempOn-3;
+      TempOff=TempOff-3;
+      Serial.println(TempOn);
+      Serial.println(TempOff);
+      Count=5;
+    }
+  }
   #if DS3231_TESTING
     void ds3231TestFunction(void)
     {
@@ -334,11 +413,13 @@ void loop(void)
   void powerOff(void)
   {
     //TO DO: ADD FUNCTION TO CALL THE FARMER WHEN POWER IS OFF AND SEND SMS
-    Serial.println("Power off interrupt triggered"); 
+    Serial.println("Power off interrupt triggered");
+    Serial.println(digitalRead(interruptPin_Off)); 
   }
   void powerOn(void)
   {
     //TO DO: ADD FUNCTION TO CALL THE FARMER WHEN POWER IS ON AND SEND SMS
     Serial.println("Power on interrupt triggered");
+    Serial.println(digitalRead(interruptPin_Off));
   }
 #endif
