@@ -5,10 +5,10 @@
 #include <DS3231.h>
 
 
-#define ENABLE_DS18B20 0 //enables the DS18B20
-#define ENABLE_DHT22   0 //enables the dht22
-#define ENABLE_LCD     0 //enables the lcd
-#define ENABLE_DS3231  0 //enables the ds3231
+#define ENABLE_DS18B20 1 //enables the DS18B20
+#define ENABLE_DHT22   1 //enables the dht22
+#define ENABLE_LCD     1 //enables the lcd
+#define ENABLE_DS3231  1 //enables the ds3231
 #define ENABLE_PWRDET  1 //enables the system to detect when the mains power is on and off
 
 /*Definitions for both the DHT22 Sensors */
@@ -42,8 +42,6 @@
   int Siku;
   Time t;
   int Count=1;
-  int TempOn=32;
-  int TempOff=36;
 #endif
  
 #if ENABLE_LCD
@@ -93,6 +91,8 @@
     uint8_t sensor4[8] = { 0x28, 0x0B, 0x56, 0x77, 0x91, 0x10, 0x02, 0x12 };
 
     float tempC;
+    int TempOn=32;
+    int TempOff=36;
   #endif
 #endif
 
@@ -290,9 +290,12 @@ void loop(void)
         #if ENABLE_LCD
           lcd.setCursor(0,0);
           lcd.print("Humidity_1: ");
-          printTemperature(hum_1);
-          lcd.print("%, Temp_1: ");
-          printTemperature(temp_1);
+          lcd.print(hum_1);
+          lcd.print("%");
+          lcd.setCursor(0,1);
+          lcd.print("Temp_1: ");
+          lcd.print(temp_1);
+          lcd.print("C");
         #endif
       #endif
       
@@ -308,11 +311,14 @@ void loop(void)
         Serial.print(temp_2);
         Serial.println(" Celsius");
         #if ENABLE_LCD
-          lcd.setCursor(0,1);
+          lcd.setCursor(0,2);
           lcd.print("Humidity_2: ");
-          printTemperature(hum_2);
-          lcd.print("%, Temp_2: ");
-          printTemperature(temp_2);
+          lcd.print(hum_2);
+          lcd.print("%");
+          lcd.setCursor(0,3);
+          lcd.print("Temp_2: ");
+          lcd.print(temp_2);
+          lcd.print("C");
         #endif        
       #endif
       delay(10000); //Delay 2 sec.
