@@ -3,18 +3,19 @@
 #include <LiquidCrystal.h>
 #include <DHT.h>
 #include <DS3231.h>
+#include <SoftwareSerial.h> 
 
-
-#define ENABLE_DS18B20 0 //enables the DS18B20
-#define ENABLE_DHT22   0 //enables the dht22
-#define ENABLE_LCD     0 //enables the lcd
-#define ENABLE_DS3231  0 //enables the ds3231
+#define ENABLE_DS18B20 1 //enables the DS18B20
+#define ENABLE_DHT22   1 //enables the dht22
+#define ENABLE_LCD     1 //enables the lcd
+#define ENABLE_DS3231  1 //enables the ds3231
 #define ENABLE_PWRDET  1 //enables the system to detect when the mains power is on and off
+#define ENABLE_SIM800  1
 
 /*Definitions for both the DHT22 Sensors */
 #define ENABLE_DHT1 1 //enables the first dht22 sensor
 #define ENABLE_DHT2 1 //enables the second dht22 sensor
-#define DHTTYPE DHT22   // DHT 22  (AM2302)
+#define DHTTYPE     DHT22   // DHT 22  (AM2302)
 #define DHTPIN_1 8     //pin for the first dht22 sensor
 #define DHTPIN_2 9     //pin for the second dht22 sensor
 
@@ -27,8 +28,11 @@
 #define SET_PARAMETERS  0 // when set to 1, one can set the day,date and time
 #define DS3231_TESTING  0 // when set to 1, it enables the ds3231TestFunction()
 
+#if ENABLE_SIM800
+  SoftwareSerial sim800l(2, 3); // create a constructor of SoftwareSerial
+#endif
 #if ENABLE_PWRDET
-  const byte powerPin = 2; // interrupt pin for when mains power goes off
+  const byte powerPin = 10; // interrupt pin for when mains power goes off
   int prevState;
   int currState;
 #endif
@@ -59,8 +63,8 @@
 
     //Variables
     int chk_1;
-    float hum_1;  //Stores humidity value
-    float temp_1; //Stores temperature value
+    float hum[2];  //Stores humidity value
+    float aveHum; //Stores temperature value
   #endif
 
   #if ENABLE_DHT2
@@ -85,12 +89,14 @@
   #endif
   #if ENABLE_DREAD
     // Addresses of 3 DS18B20s.Replace with own addresses
-    uint8_t sensor1[8] = { 0x28, 0x51, 0x7C, 0x77, 0x91, 0x10, 0x02, 0xB6 };
+//    uint8_t sensor1[8] = { 0x28, 0x51, 0x7C, 0x77, 0x91, 0x10, 0x02, 0xB6 };
     uint8_t sensor2[8] = { 0x28, 0x4B, 0xCA, 0x77, 0x91, 0x11, 0x02, 0x35 };
     uint8_t sensor3[8] = { 0x28, 0xBD, 0x98, 0x77, 0x91, 0x11, 0x02, 0xE3 };
     uint8_t sensor4[8] = { 0x28, 0x0B, 0x56, 0x77, 0x91, 0x10, 0x02, 0x12 };
 
-    float tempC;
+    float tempC [3];
+    float aveTemp=0;
+  
     int TempOn=32;
     int TempOff=36;
   #endif
@@ -149,6 +155,18 @@ void setup(void)
     pinMode(powerPin, INPUT_PULLUP);
     prevState = digitalRead(powerPin);
    #endif
+   #if ENABLE_SIM800
+    sim800l.begin(9600);   // Setting the baud rate of GSM Module  
+    delay(100);
+    sim800l.println("AT");
+    delay(1000);
+    sim800l.println("AT+CFUN=?");
+    delay(5000);
+    //sim800l.println("AT+CFUN?");
+    //delay(5000);
+    sim800l.println("AT+CFUN=1");
+    delay(5000);    
+   #endif
 }
 
 void loop(void)
@@ -172,7 +190,7 @@ void loop(void)
   #if ENABLE_PWRDET
     powerDetection();
   #endif
-  
+ delay(2000); 
 }
 
 #if ENABLE_DS18B20
@@ -180,75 +198,76 @@ void loop(void)
   {
     #if ENABLE_DREAD
       sensors.requestTemperatures();
-      
-      Serial.print("Sensor 1: ");
-      printTemperature(sensor1);
+
+      tempC[0] = sensors.getTempC(sensor2);
+      tempC[1] = sensors.getTempC(sensor3);        
+      tempC[2] = sensors.getTempC(sensor4);
+
+      aveTemp = (tempC[0]+tempC[1]+tempC[2])/3;
+      Serial.print("Temperature: ");
+      Serial.println(aveTemp);
       #if ENABLE_LCD
        lcd.setCursor(0,0);
-       lcd.print("Sensor 1: ");
-       printTemperatureLCD();
+       lcd.print("Temperature ");
+       lcd.print(aveTemp);
       #endif
-      
-      Serial.print("Sensor 2: ");
-      printTemperature(sensor2);
-      #if ENABLE_LCD
-       lcd.setCursor(0,1);
-       lcd.print("Sensor 2: ");
-       printTemperatureLCD();
-      #endif
-      
-      Serial.print("Sensor 3: ");
-      printTemperature(sensor3);
-      #if ENABLE_LCD
-        lcd.setCursor(0,2);
-        lcd.print("Sensor 3: ");
-        printTemperatureLCD();
-      #endif
-
-      Serial.print("Sensor 4: ");
-      printTemperature(sensor4);
-      #if ENABLE_LCD
-       lcd.setCursor(0,3);
-       lcd.print("Sensor 4: ");
-       printTemperatureLCD();
-      #endif
-      
-      Serial.println();
-      delay(5000);
-
     #endif 
   }
   
   #if ENABLE_DREAD
-    void printTemperature(DeviceAddress deviceAddress)
+    void printTemperature(DeviceAddress deviceAddress, int sensor)
     {
-      tempC = sensors.getTempC(deviceAddress);
-      Serial.print(tempC);
-      Serial.print((char)176);
-      Serial.println("C");
+      tempC[sensor] = sensors.getTempC(deviceAddress);
+//      Serial.print(tempC);
+//      Serial.print((char)176);
+//      Serial.println("C");
 //      Serial.print(DallasTemperature::toFahrenheit(tempC));
 //      Serial.print((char)176);
 //      Serial.println("F");
+//      Serial.print("Sensor 1: ");
+//      printTemperature(sensor1);
+//      #if ENABLE_LCD
+//       lcd.setCursor(0,0);
+//       lcd.print("Sensor 1: ");
+//       printTemperatureLCD();
+//      #endif
+      
+//      Serial.print("Sensor 2: ");
+//      printTemperature(sensor2);
+//      #if ENABLE_LCD
+//       lcd.setCursor(0,1);
+//       lcd.print("Sensor 2: ");
+//       printTemperatureLCD();
+//      #endif
+//      
+//      Serial.print("Sensor 3: ");
+//      printTemperature(sensor3);
+//      #if ENABLE_LCD
+//        lcd.setCursor(0,2);
+//        lcd.print("Sensor 3: ");
+//        printTemperatureLCD();
+//      #endif
+//
+//      Serial.print("Sensor 4: ");
+//      printTemperature(sensor4);
+//      #if ENABLE_LCD
+//       lcd.setCursor(0,3);
+//       lcd.print("Sensor 4: ");
+//       printTemperatureLCD();
+//      #endif
+//      
+//      Serial.println();
     }
-    #if ENABLE_LCD
-      void printTemperatureLCD(void)
-      {
-        lcd.print(tempC);
-        lcd.print((char)176);
-        lcd.print("C");
-      }
-    #endif
+
   void regulate()
   {
-    if(sensors.getTempCByIndex(0)<TempOn)
+    if(aveTemp<TempOn)
     {
-//      digitalWrite(heater,HIGH);
-//      digitalWrite(13,HIGH);
+       digitalWrite(13,HIGH);
     }
-    else if(sensors.getTempCByIndex(0)>TempOff)
+    else if(aveTemp>TempOff)
     {
-//      digitalWrite(heater,LOW);
-//      digitalWrite(13,LOW);
+      digitalWrite(13,LOW);
     } 
   }    
   #endif
@@ -272,55 +291,24 @@ void loop(void)
   void dht22Sensor(void)
   {
       #if ENABLE_DHT1
-        delay(2000);
         //Read data and store it to variables hum and temp
-        hum_1 = dht_1.readHumidity();
-        temp_1= dht_1.readTemperature();
-        //Print temp and humidity values to serial monitor
-        Serial.print("Humidity_1: ");
-        Serial.print(hum_1);
-        Serial.print(" %, Temp_1: ");
-        Serial.print(temp_1);
-        Serial.println(" Celsius");
-
-        #if ENABLE_LCD
-          lcd.setCursor(0,0);
-          lcd.print("Humidity_1: ");
-          lcd.print(hum_1);
-          lcd.print("%");
-          lcd.setCursor(0,1);
-          lcd.print("Temp_1: ");
-          lcd.print(temp_1);
-          lcd.print("C");
-        #endif
+        hum[0] = dht_1.readHumidity();
       #endif
-      
       #if ENABLE_DHT2
-        delay(2000);
         //Read data and store it to variables hum and temp
-        hum_2 = dht_2.readHumidity();
-        temp_2= dht_2.readTemperature();
-        //Print temp and humidity values to serial monitor
-        Serial.print("Humidity_2: ");
-        Serial.print(hum_2);
-        Serial.print(" %, Temp_2: ");
-        Serial.print(temp_2);
-        Serial.println(" Celsius");
-        #if ENABLE_LCD
-          lcd.setCursor(0,2);
-          lcd.print("Humidity_2: ");
-          lcd.print(hum_2);
-          lcd.print("%");
-          lcd.setCursor(0,3);
-          lcd.print("Temp_2: ");
-          lcd.print(temp_2);
-          lcd.print("C");
-        #endif        
-      #endif
-      delay(10000); //Delay 2 sec.
+        hum[1] = dht_2.readHumidity();
+      #endif    
+      aveHum = (hum[0]+hum[1])/2;  
+     //Print temp and humidity values to serial monitor
+      Serial.print("Humidity: ");
+      Serial.print(aveHum);
+      Serial.println(" %");
       #if ENABLE_LCD
-        lcd.clear();
-      #endif
+        lcd.setCursor(0,1);
+        lcd.print("Humidity: ");
+        lcd.print(aveHum);
+        lcd.print("%");
+      #endif        
   }
 #endif
 
@@ -418,21 +406,73 @@ void loop(void)
     currState = digitalRead(powerPin);
     if(currState == LOW)
     {
-      if(currState != prevState)
+      if(currState != prevState || prevState==LOW)
       {
-       Serial.println("Power OFF");
-       prevState = currState;  
+//        int netStatus = sim800l.print("AT+CREG?");
+//         while(sim800l.available())
+//         {Serial.write(sim800l.read());}
+//        while(netStatus!=1)
+//        {
+//          netStatus = sim800l.print("AT+CREG?");
+//         while(sim800l.available())
+//         {Serial.write(sim800l.read());}         
+//        }
+//        Serial.println("Network Found");
+        int count=0;
+        do
+        {
+          Serial.println("Power OFF");
+          Serial.println("Sending Text...");
+          sim800l.print("AT+CMGF=1\r"); // Set the shield to SMS mode
+          delay(100);
+          sim800l.print("AT+CMGS=\"+254736184663\"\r");  
+          delay(200);
+          sim800l.print("Stima imepotea "); //the content of the message
+          sim800l.print("\r"); 
+          delay(500);
+          sim800l.print((char)26);//the ASCII code of the ctrl+z is 26 (required according to the datasheet)
+          delay(100);
+          sim800l.println();
+          Serial.println("Text Sent.");
+          delay(5000);
+          
+          sim800l.println("ATD+ +254736184663;");//dial the number, must include country code
+//          delay(20000);
+//          sim800l.println("ATH");
+          count++;
+        }while(count<3);
+        prevState = currState;  
       }
     } 
     else if (currState == HIGH)
     {
       if(currState != prevState)
       {
-        Serial.println("Power ON");
+        int count=0;
+        do
+        {
+          Serial.println("Power ON");
+          Serial.println("Sending Text...");
+          sim800l.print("AT+CMGF=1\r"); // Set the shield to SMS mode
+          delay(100);
+          sim800l.print("AT+CMGS=\"+254736184663\"\r");  
+          delay(200);
+          sim800l.print("Stima imerudi "); //the content of the message
+          sim800l.print("\r"); 
+          delay(500);
+          sim800l.print((char)26);//the ASCII code of the ctrl+z is 26 (required according to the datasheet)
+          delay(100);
+          sim800l.println();
+          Serial.println("Text Sent.");
+          delay(5000);
+          sim800l.println("ATD+ +254736184663;");//dial the number, must include country code
+          delay(100);
+          sim800l.println();
+          count++;
+        }while(count<3);
         prevState = currState;
       }
     }
-    delay(1000);
   }
 
 #endif
