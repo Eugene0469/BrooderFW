@@ -36,8 +36,8 @@ void loop()
 {
   Serial.println("im in the loop");
   index=1; // first position in the prefered memory storage. 
-//  text=Sim800l.readSms(index);    
-//  Serial.println(text);
+  text=Sim800l.readSms(index);    
+  Serial.println(text);
 
   if (Serial.available()>0) // checks for any data  coming through serial port of arduino.
    switch(Serial.read())   //
