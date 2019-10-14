@@ -6,12 +6,13 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 #define ONE_WIRE_BUS A0 // Data wire is plugged into port 9 on the Arduino
 #define precision 12 // OneWire precision Dallas Sensor
+#define NUM_OF_SENSORS 7 //Number of connected sensors
 int sen_number = 0; // Counter of Dallas sensors
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Temperature.
-DeviceAddress T[6]; // arrays to hold device addresses
-float temp[6];
+DeviceAddress T[NUM_OF_SENSORS]; // arrays to hold device addresses
+float temp[NUM_OF_SENSORS];
 
 void setup(void)
 {
@@ -36,6 +37,7 @@ void setup(void)
   if (!sensors.getAddress(T[3], 3)) Serial.println("Not Found Sensor 4");
   if (!sensors.getAddress(T[4], 4)) Serial.println("Not Found Sensor 5");
   if (!sensors.getAddress(T[5], 5)) Serial.println("Not Found Sensor 6");
+  if (!sensors.getAddress(T[6], 6)) Serial.println("Not Found Sensor 7");
   
   // show the addresses we found on the bus
   for (int k =0; k < sensors.getDeviceCount(); k++) {
@@ -47,7 +49,8 @@ void setup(void)
         } else if (k == 3) { printAddress(T[3]); Serial.println();
          } else if (k == 4) { printAddress(T[4]); Serial.println();
           } else if (k == 5) { printAddress(T[5]); Serial.println();
-           }  
+           } else if (k == 6) { printAddress(T[6]); Serial.println();
+            }  
   }
   // set the resolution to 12 bit per device
   sensors.setResolution(T[0], precision);
@@ -56,6 +59,7 @@ void setup(void)
   sensors.setResolution(T[3], precision);
   sensors.setResolution(T[4], precision);
   sensors.setResolution(T[5], precision);
+  sensors.setResolution(T[6], precision);
   
   for (int k =0; k < sensors.getDeviceCount(); k++) {
   Serial.print("Sensor "); Serial.print(k+1);
@@ -66,6 +70,7 @@ void setup(void)
       } else if (k == 3) { Serial.print(sensors.getResolution(T[3]), DEC); Serial.println();
        } else if (k == 4) { Serial.print(sensors.getResolution(T[4]), DEC); Serial.println();
         } else if (k == 5) { Serial.print(sensors.getResolution(T[5]), DEC); Serial.println();
+         } else if (k == 6) { Serial.print(sensors.getResolution(T[6]), DEC); Serial.println();
          }
   }
 }

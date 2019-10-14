@@ -50,6 +50,7 @@ void loop()
       DialVoiceCall();
       break;
   }
+  readTextMessage();
 }
 
 
@@ -58,7 +59,7 @@ void SendTextMessage()
   Serial.println("Sending Text...");
   sim800l.print("AT+CMGF=1\r"); // Set the shield to SMS mode
   delay(100);
-  sim800l.print("AT+CMGS=\"+254736184663\"\r");  
+  sim800l.print("AT+CMGS=\"+254721460975\"\r");  
   delay(200);
   sim800l.print("This is a Test text message from SIM800L "); //the content of the message
   sim800l.print("\r"); 
@@ -72,7 +73,7 @@ void SendTextMessage()
 
 void DialVoiceCall()
 {
-  sim800l.println("ATD+ +254736184663;");//dial the number, must include country code
+  sim800l.println("ATD+ +254721460975;");//dial the number, must include country code
   delay(100);
   sim800l.println();
 }
