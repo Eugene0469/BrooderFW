@@ -42,10 +42,6 @@ void setup() {
   rtc.begin();  
   pinMode(pinCS, OUTPUT);
 
-  // SD Card Initialization
-  if (SD.begin())Serial.println("SD card is ready to use."); 
-  else{Serial.println("SD card initialization failed");return;}
-
   Serial.println("Dallas Temperature IC Control Library");
   // Start up the library
   sensors.begin();
@@ -97,6 +93,13 @@ void setup() {
         } else if (k == 5) { Serial.print(sensors.getResolution(T[5]), DEC); Serial.println();
          }
   }
+
+  lcd.setCursor(0,0);
+  lcd.print("Brooder Bora");
+  
+  // SD Card Initialization
+  if (SD.begin())Serial.println("SD card is ready to use."); 
+  else{Serial.println("SD card initialization failed");return;}
 }
 
 // function to print a device address
@@ -145,7 +148,7 @@ void readHumidityValue(){
   h = dht.readHumidity();
   // Check if any reads failed and exit early (to try again).
   if (isnan(h)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
+//    Serial.println(F("Failed to read from DHT sensor!"));
     return;
   }
   Serial.print(F("Humidity: "));
@@ -162,7 +165,7 @@ void readHumidityValue_1(){
   h_1 = dht_1.readHumidity();
   // Check if any reads failed and exit early (to try again).
   if (isnan(h_1)) {
-    Serial.println(F("Failed to read from DHT_1 sensor!"));
+//    Serial.println(F("Failed to read from DHT_1 sensor!"));
     return;
   }
   Serial.print(F("Humidity_1: "));
@@ -172,11 +175,13 @@ void readHumidityValue_1(){
 
 void readTemp(){
   // call sensors.requestTemperatures() to issue a global temperature request to all devices on the bus
-  Serial.print("Reading DATA..."); sensors.requestTemperatures(); Serial.println("DONE");
+//  Serial.print("Reading DATA..."); 
+    sensors.requestTemperatures(); 
+//    Serial.println("DONE");
   // print the device information
   for (int k =0; k < sensors.getDeviceCount(); k++) {
-    Serial.print("Sensor "); Serial.print(k+1); Serial.print(" ");
-    printData(T[k]);
+//    Serial.print("Sensor "); Serial.print(k+1); Serial.print(" ");
+//    printData(T[k]);
  
   }
   for(int i = 0; i<sensors.getDeviceCount(); i++)
@@ -184,11 +189,10 @@ void readTemp(){
     temp[i] = sensors.getTempC(T[i]);
     if(temp[i] != -127.00)
     {
-      lcd.setCursor(0,0);
-      lcd.print("Sensor Number ");
-      lcd.print(i+1);
       lcd.setCursor(0,1);
-      lcd.print(" Temp: ");
+      lcd.print("Zone ");
+      lcd.print(i+1);
+       lcd.print(" : ");
       lcd.print(temp[i]); lcd.write((char)223); lcd.print("C ");  
       delay(2000);
     
@@ -197,9 +201,12 @@ void readTemp(){
 }
 
 void logData(){
+  t = rtc.getTime();
   int rem = t.min%10;
   if(rem==0 && count==0)
   {
+    Serial.print(rtc.getDateStr());
+    Serial.print(" ");
     Serial.print(rtc.getTimeStr());
     for(int i=0; i<sensors.getDeviceCount();i++)
     {
@@ -211,7 +218,9 @@ void logData(){
     Serial.print(",");
     Serial.println(h_1);
     myFile = SD.open("log.txt", FILE_WRITE);
-    if (myFile) {    
+    if (myFile) { 
+      myFile.print(rtc.getDateStr()); 
+      myFile.print(",");
       myFile.print(rtc.getTimeStr());
       for(int i=0; i<sensors.getDeviceCount();i++)
       {
@@ -227,7 +236,7 @@ void logData(){
     // if the file didn't open, print an error:
     else {
       Serial.println("error opening test.txt");
-    }
+    }   
     count++;
     delay(1000);
   }

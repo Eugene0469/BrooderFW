@@ -13,7 +13,7 @@ Sim800l Sim800l;  //to declare the library
 String text;     // to storage the text of the sms
 uint8_t index;   // to indicate the message to read.
 
-SoftwareSerial sim800l(2, 3); // create a constructor of SoftwareSerial
+SoftwareSerial sim800l(A3, A2); // create a constructor of SoftwareSerial
 
 void setup()
 {
