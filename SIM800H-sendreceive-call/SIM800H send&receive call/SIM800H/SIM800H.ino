@@ -5,40 +5,41 @@
   *function to 
   *     
   */
-  
-
-#include <Sim800l.h>
 #include <SoftwareSerial.h> //is necesary for the library!! 
-Sim800l Sim800l;  //to declare the library
-String text;     // to storage the text of the sms
-uint8_t index;   // to indicate the message to read.
 
-SoftwareSerial sim800l(A3, A2); // create a constructor of SoftwareSerial
+SoftwareSerial sim800l(A2, A3); // create a constructor of SoftwareSerial
+char incomingByte; 
+String inputString;
 
 void setup()
 {
-  sim800l.begin(9600);   // Setting the baud rate of GSM Module  
   Serial.begin(9600);    // Setting the baud rate of Serial Monitor (Arduino)
-  delay(100);
-  sim800l.println("AT");
+  sim800l.begin(9600);   // Setting the baud rate of GSM Module  
+  while(!sim800l.available()){
+   sim800l.println("AT");
+   delay(1000); 
+   Serial.println("Connecting...");
+  }
+  Serial.println("Connected!"); 
+//  delay(100);
+//  sim800l.println("AT");
+//  delay(1000);
+//  sim800l.println("AT+CFUN=?");
+//  delay(5000);
+//  //sim800l.println("AT+CFUN?");
+//  //delay(5000);
+//  sim800l.println("AT+CFUN=1");
+//  delay(5000);
+  sim800l.println("AT+CMGF=1"); // Configuring TEXT mode
   delay(1000);
-  sim800l.println("AT+CFUN=?");
-  delay(5000);
-  //sim800l.println("AT+CFUN?");
-  //delay(5000);
-  sim800l.println("AT+CFUN=1");
-  delay(5000);
-  Serial.println("im in the setup");
+  sim800l.println("AT+CNMI=1,2,0,0,0"); // Decides how newly arrived SMS
+  delay(1000);
+  sim800l.println("AT+CMGL=\"REC UNREAD\""); // Read Unread Messages
 }
 
 
 void loop()
 {
-  Serial.println("im in the loop");
-  index=1; // first position in the prefered memory storage. 
-  text=Sim800l.readSms(index);    
-  Serial.println(text);
-
   if (Serial.available()>0) // checks for any data  coming through serial port of arduino.
    switch(Serial.read())   //
   {
@@ -49,9 +50,6 @@ void loop()
       DialVoiceCall();
       break;
   }
-
- if (sim800l.available()>0)
-   Serial.write(sim800l.read()); // prints the data collected from software serial port to serial monitor of arduino
 }
 
 
@@ -79,4 +77,31 @@ void DialVoiceCall()
   sim800l.println();
 }
 
+void readTextMessage(){
+if (sim800l.available())
+//   Serial.write(sim800l.read()); // prints the data collected from software serial port to serial monitor of arduino
+    delay(100);   // Serial Buffer
+   while(sim800l.available()){
+   incomingByte = sim800l.read();
+   inputString += incomingByte; 
+  }
+  delay(10);      
+
+  Serial.println(inputString);
+  inputString.toUpperCase(); // Uppercase the Received Message
+
+  //turn RELAY ON or OFF
+  if (inputString.indexOf("ON") > -1){
+    SendTextMessage();
+    }
+  delay(2000);
+  //Delete Messages & Save Memory
+  if (inputString.indexOf("OK") == -1){
+  sim800l.println("AT+CMGDA=\"DEL ALL\"");
+
+  delay(1000);}
+
+  inputString = "";   
+
+}
  
