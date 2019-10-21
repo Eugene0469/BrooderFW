@@ -23,7 +23,7 @@ float temp[NUM_OF_SENSORS];
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  lcd.begin(16, 2);
+  lcd.begin(20, 4);
 
   Serial.println("Dallas Temperature IC Control Library");
   // Start up the library
@@ -205,6 +205,10 @@ void readTextMessage(){
   if (inputString.indexOf("ON") > -1){
     SendTextMessage();
     }
+  if (inputString.indexOf("+254") > -1){
+      ChangeNumber();
+    }    
+    
   delay(2000);
 //  //Delete Messages & Save Memory
 //  if (inputString.indexOf("OK") == -1){

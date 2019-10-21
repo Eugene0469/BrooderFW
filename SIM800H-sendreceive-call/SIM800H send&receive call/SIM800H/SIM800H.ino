@@ -10,7 +10,7 @@
 SoftwareSerial sim800l(A2, A3); // create a constructor of SoftwareSerial
 char incomingByte; 
 String inputString;
-
+String phoneNumber = "+254721460975"
 void setup()
 {
   Serial.begin(9600);    // Setting the baud rate of Serial Monitor (Arduino)
