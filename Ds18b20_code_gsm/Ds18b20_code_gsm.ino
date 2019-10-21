@@ -37,48 +37,29 @@ void setup() {
   if (sensors.isParasitePowerMode()) Serial.println("ON");
   else Serial.println("OFF");
   // Search for devices on the bus and assign based on an index.
-  
-  if (!sensors.getAddress(T[0], 0)) Serial.println("Not Found Sensor 1");
-  if (!sensors.getAddress(T[1], 1)) Serial.println("Not Found Sensor 2");
-  if (!sensors.getAddress(T[2], 2)) Serial.println("Not Found Sensor 3");
-  if (!sensors.getAddress(T[3], 3)) Serial.println("Not Found Sensor 4");
-  if (!sensors.getAddress(T[4], 4)) Serial.println("Not Found Sensor 5");
-  if (!sensors.getAddress(T[5], 5)) Serial.println("Not Found Sensor 6");
-  if (!sensors.getAddress(T[6], 6)) Serial.println("Not Found Sensor 7");
-  
+  for(int i=0; i<sensors.getDeviceCount();i++)
+  {
+    if (!sensors.getAddress(T[i], i)) 
+    {
+      Serial.print("Not Found Sensor ");
+      Serial.println(i+1);
+    }
+  }  
   // show the addresses we found on the bus
   for (int k =0; k < sensors.getDeviceCount(); k++) {
     Serial.print("Sensor "); Serial.print(k+1);
     Serial.print(" Address: ");
-    if (k == 0) { printAddress(T[0]); Serial.println();
-      } else if (k == 1) { printAddress(T[1]); Serial.println();
-       } else if (k == 2) { printAddress(T[2]); Serial.println();
-        } else if (k == 3) { printAddress(T[3]); Serial.println();
-         } else if (k == 4) { printAddress(T[4]); Serial.println();
-          } else if (k == 5) { printAddress(T[5]); Serial.println();
-           } else if (k == 6) { printAddress(T[6]); Serial.println();
-            } 
+    printAddress(T[k]); Serial.println();
   }
   // set the resolution to 12 bit per device
-  sensors.setResolution(T[0], precision);
-  sensors.setResolution(T[1], precision);
-  sensors.setResolution(T[2], precision);
-  sensors.setResolution(T[3], precision);
-  sensors.setResolution(T[4], precision);
-  sensors.setResolution(T[5], precision);
-  sensors.setResolution(T[6], precision);
-  
+  for(int i=0;i<sensors.getDeviceCount();i++)
+  {
+    sensors.setResolution(T[i], precision);
+  }
   for (int k =0; k < sensors.getDeviceCount(); k++) {
-  Serial.print("Sensor "); Serial.print(k+1);
-  Serial.print(" Resolution: ");
-  if (k == 0) { Serial.print(sensors.getResolution(T[0]), DEC); Serial.println();
-    } else if (k == 1) { Serial.print(sensors.getResolution(T[1]), DEC); Serial.println();
-     } else if (k == 2) { Serial.print(sensors.getResolution(T[2]), DEC); Serial.println();
-      } else if (k == 3) { Serial.print(sensors.getResolution(T[3]), DEC); Serial.println();
-       } else if (k == 4) { Serial.print(sensors.getResolution(T[4]), DEC); Serial.println();
-        } else if (k == 5) { Serial.print(sensors.getResolution(T[5]), DEC); Serial.println();
-         } else if (k == 6) { Serial.print(sensors.getResolution(T[6]), DEC); Serial.println();
-          }
+    Serial.print("Sensor "); Serial.print(k+1);
+    Serial.print(" Resolution: ");
+    Serial.print(sensors.getResolution(T[k]), DEC); Serial.println();
   }
 
   lcd.setCursor(0,0);
@@ -137,15 +118,8 @@ void loop() {
 
 void readTemp(){
   // call sensors.requestTemperatures() to issue a global temperature request to all devices on the bus
-//  Serial.print("Reading DATA..."); 
     sensors.requestTemperatures(); 
-//    Serial.println("DONE");
   // print the device information
-  for (int k =0; k < sensors.getDeviceCount(); k++) {
-//    Serial.print("Sensor "); Serial.print(k+1); Serial.print(" ");
-//    printData(T[k]);
- 
-  }
   for(int i = 0; i<sensors.getDeviceCount(); i++)
   {
     temp[i] = sensors.getTempC(T[i]);
@@ -157,7 +131,6 @@ void readTemp(){
        lcd.print(" : ");
       lcd.print(temp[i]); lcd.write((char)223); lcd.print("C ");  
 //      delay(2000);
-    
     }  
   }
 }
