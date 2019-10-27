@@ -10,7 +10,6 @@
 SoftwareSerial sim800l(A2, A3); // create a constructor of SoftwareSerial
 char incomingByte; 
 String inputString;
-String phoneNumber = "+254721460975"
 void setup()
 {
   Serial.begin(9600);    // Setting the baud rate of Serial Monitor (Arduino)
@@ -79,7 +78,7 @@ void DialVoiceCall()
 }
 
 void readTextMessage(){
-if (sim800l.available())
+//if (sim800l.available())
 //   Serial.write(sim800l.read()); // prints the data collected from software serial port to serial monitor of arduino
     delay(100);   // Serial Buffer
    while(sim800l.available()){
