@@ -1,5 +1,6 @@
 #include "DHT.h"
-#include <LiquidCrystal.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h> //including software serial library
@@ -14,8 +15,7 @@ SoftwareSerial sim800l(A2, A3); // create a constructor of SoftwareSerial
 char incomingByte; 
 String inputString;
 
-const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
 
 #define ONE_WIRE_BUS A0 // Data wire is plugged into port 9 on the Arduino
 #define precision 12 // OneWire precision Dallas Sensor
@@ -40,6 +40,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   lcd.begin(20, 4);
+  lcd.backlight();//To Power ON the back light
   dht.begin();
   dht_1.begin();
   rtc.begin();
@@ -81,12 +82,12 @@ void setup() {
     Serial.print(sensors.getResolution(T[k]), DEC); Serial.println();
   }
 
-//  lcd.setCursor(0,0);
-//  lcd.print("     AgriQ & Aut    ");
+  lcd.setCursor(0,0);
+  lcd.print("  AgriQ & Aut Ltd    ");
   
   // SIM800L GSM Module Initialization
   sim800l.begin(9600);   // Setting the baud rate of GSM Module  
-  while(!sim800l.available()){
+  if(!sim800l.available()){
    sim800l.println("AT");
    delay(1000); 
    Serial.println("Connecting...");
@@ -172,8 +173,8 @@ void readTemp(){
 void readHumidityValue(){
     // Wait a few seconds between measurements.
   delay(2000);
-  lcd.setCursor(0,3);
-  lcd.print("                ");
+//  lcd.setCursor(0,3);
+//  lcd.print("                ");
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
   h = dht.readHumidity();
@@ -198,7 +199,7 @@ void readHumidityValue(){
     Serial.print(h);
     Serial.println(F("%"));
     lcd.setCursor(0,3);
-    lcd.print("Humidity 1 : ");
+    lcd.print("Humidity: ");
     lcd.print(h);
     lcd.print("%");
   }
@@ -207,8 +208,8 @@ void readHumidityValue(){
 void readHumidityValue_1(){
     // Wait a few seconds between measurements.
 //  delay(2000);
-  lcd.setCursor(0,3);
-  lcd.print("                ");
+//  lcd.setCursor(0,3);
+//  lcd.print("                ");
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
   h_1 = dht_1.readHumidity();
@@ -347,9 +348,9 @@ void getDate(){
   // Get data from the DS3231
   t = rtc.getTime();
   int rem = t.min%30;
-  Serial.println(rtc.getDateStr());
-  lcd.setCursor(0,0);
-  lcd.print(rtc.getTimeStr());
+//  Serial.println(rtc.getDateStr());
+//  lcd.setCursor(0,0);
+//  lcd.print(rtc.getTimeStr());
   if(rem==0 && count ==0){
     //activate relay
     SendTextMessage();
