@@ -35,7 +35,7 @@ DS3231  rtc(SDA, SCL);
 Time  t;
 
 int count=0;
-
+int relayPin = 7;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -99,6 +99,7 @@ void setup() {
   delay(1000);
   sim800l.println("AT+CMGL=\"REC UNREAD\""); // Read Unread Messages
 
+  pinMode(relayPin, OUTPUT);
 }
 
 // function to print a device address
@@ -135,8 +136,9 @@ void loop() {
   readHumidityValue();
   readTemp();
   readHumidityValue_1();
+  extractorFanCtrl();
 //  readTextMessage();
-  getDate();
+  sendAlert();
 }
 
 void readTemp(){
@@ -241,6 +243,20 @@ void readHumidityValue_1(){
 
 }
 
+
+void extractorFanCtrl()
+{
+  int ave_hum = 0;
+  ave_hum = (h+h_1)/2;
+  if(ave_hum >= 80)
+  {
+    digitalWrite(relayPin, LOW); //The relay module is active low
+  }
+  else if (ave_hum <= 60)
+  {
+    digitalWrite(relayPin, HIGH);
+  }
+}
 void SendTextMessage()
 {
   Serial.println("Sending Text...");
@@ -344,7 +360,7 @@ void SendTextMessage()
 //  inputString = "";  
 //}
 
-void getDate(){
+void sendAlert(){
   // Get data from the DS3231
   t = rtc.getTime();
   int rem = t.min%30;
