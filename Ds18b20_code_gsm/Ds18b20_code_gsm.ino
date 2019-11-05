@@ -247,7 +247,7 @@ void readHumidityValue_1(){
 void extractorFanCtrl()
 {
   int ave_hum = 0;
-  ave_hum = (h+h_1)/2;
+  ave_hum = h;
   if(ave_hum >= 80)
   {
     digitalWrite(relayPin, LOW); //The relay module is active low
@@ -364,7 +364,7 @@ void sendAlert(){
   // Get data from the DS3231
   t = rtc.getTime();
   int rem = t.min%30;
-//  Serial.println(rtc.getDateStr());
+  Serial.println(rtc.getDateStr());
 //  lcd.setCursor(0,0);
 //  lcd.print(rtc.getTimeStr());
   if(rem==0 && count ==0){
