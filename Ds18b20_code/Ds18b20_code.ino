@@ -4,7 +4,7 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-#define ONE_WIRE_BUS 2 // Data wire is plugged into port 9 on the Arduino
+#define ONE_WIRE_BUS A0 // Data wire is plugged into port 9 on the Arduino
 #define precision 12 // OneWire precision Dallas Sensor
 #define NUM_OF_SENSORS 9 //Number of connected sensors
 int sen_number = 0; // Counter of Dallas sensors
@@ -17,7 +17,7 @@ float temp[NUM_OF_SENSORS];
 
 void setup(void)
 {
-  lcd.begin(16,2);
+  lcd.begin(20,4);
   Serial.begin(9600); //Start serial port
   Serial.println("Dallas Temperature IC Control Library");
   // Start up the library

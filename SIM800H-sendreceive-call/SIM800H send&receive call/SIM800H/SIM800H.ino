@@ -7,7 +7,7 @@
   */
 #include <SoftwareSerial.h> //is necesary for the library!! 
 
-SoftwareSerial sim800l(A2, A3); // create a constructor of SoftwareSerial
+SoftwareSerial sim800l(8, 9); // create a constructor of SoftwareSerial
 char incomingByte; 
 String inputString;
 void setup()
@@ -49,16 +49,16 @@ void loop()
       DialVoiceCall();
       break;
   }
-  readTextMessage();
+//  readTextMessage();
 }
 
 
 void SendTextMessage()
 {
   Serial.println("Sending Text...");
-  sim800l.print("AT+CMGF=1\r"); // Set the shield to SMS mode
+  sim800l.print("AT+CMGF=0\r"); // Set the shield to SMS mode
   delay(100);
-  sim800l.print("AT+CMGS=\"+254721460975\"\r");  
+  sim800l.print("AT+CMGS=\"+254753653176\"\r");  
   delay(200);
   sim800l.print("This is a Test text message from SIM800L "); //the content of the message
   sim800l.print("\r"); 
@@ -72,7 +72,7 @@ void SendTextMessage()
 
 void DialVoiceCall()
 {
-  sim800l.println("ATD+ +254721460975;");//dial the number, must include country code
+  sim800l.println("ATD+ +254753653176;");//dial the number, must include country code
   delay(100);
   sim800l.println();
 }
