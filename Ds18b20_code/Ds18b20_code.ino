@@ -1,8 +1,10 @@
-#include <LiquidCrystal.h>
-const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+//#include <LiquidCrystal.h>
+//const int rs = 23, en = 25, d4 = 27, d5 = 29, d6 = 31, d7 = 33;
+//LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+#include <LiquidCrystal_I2C.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <Wire.h> 
 
 #define ONE_WIRE_BUS A0 // Data wire is plugged into port 9 on the Arduino
 #define precision 12 // OneWire precision Dallas Sensor
@@ -10,14 +12,18 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 int sen_number = 0; // Counter of Dallas sensors
 
 OneWire oneWire(ONE_WIRE_BUS);
-OneWire  ds(2);  // on pin 10 (a 4.7K resistor is necessary)
+//OneWire  ds(2);  // on pin 10 (a 4.7K resistor is necessary)
 DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Temperature.
 DeviceAddress T[NUM_OF_SENSORS]; // arrays to hold device addresses
 float temp[NUM_OF_SENSORS];
 
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+
 void setup(void)
 {
-  lcd.begin(20,4);
+//  lcd.begin(20,4);
+  lcd.begin(20, 4);
+  lcd.backlight();//To Power ON the back light
   Serial.begin(9600); //Start serial port
   Serial.println("Dallas Temperature IC Control Library");
   // Start up the library
@@ -25,6 +31,7 @@ void setup(void)
   // locate devices on the bus
   Serial.print("Found: ");
   Serial.print(sensors.getDeviceCount(), DEC);
+  delay(1000);
   Serial.println(" Devices.");
   // report parasite power requirements
   Serial.print("Parasite power is: ");
@@ -91,26 +98,105 @@ void printData(DeviceAddress deviceAddress)
 void loop(void)
 {
   // call sensors.requestTemperatures() to issue a global temperature request to all devices on the bus
-  Serial.print("Reading DATA..."); sensors.requestTemperatures(); Serial.println("DONE");
+  Serial.print("Reading DATA..."); 
+  sensors.requestTemperatures(); 
+  Serial.println("DONE");
   // print the device information
   for (int k =0; k < sensors.getDeviceCount(); k++) {
     Serial.print("Sensor "); Serial.print(k+1); Serial.print(" ");
     printData(T[k]);
   }
 
-//  for(int i = 0; i<sensors.getDeviceCount(); i++)
-//  {
-//    temp[i] = sensors.getTempC(T[i]);
-//    if(temp[i] != -127.00)
-//    {
-//      lcd.setCursor(0,0);
-//      lcd.print("Sensor Number ");
-//      lcd.print(i+1);
+  for(int i = 0; i<sensors.getDeviceCount(); i++)
+  {
+    temp[i] = sensors.getTempC(T[i]);
+    if(temp[i] != -127.00)
+    {
+      lcd.setCursor(0,i);
+      lcd.print("Zone ");
+      lcd.print(i+1);
 //      lcd.setCursor(0,1);
-//      lcd.print(" Temp: ");
-//      lcd.print(temp[i]); lcd.write((char)223); lcd.print("C "); 
+      lcd.print(": ");
+      lcd.print(temp[i]); lcd.write((char)223); lcd.print("C "); 
 //      delay(1200);     
-//    }  
-//    delay(1000);
-//  }
+    }  
+    delay(1000);
   }
+  }
+// DS3231_Serial_Easy
+// Copyright (C)2015 Rinky-Dink Electronics, Henning Karlsen. All right reserved
+// web: http://www.RinkyDinkElectronics.com/
+//
+// A quick demo of how to use my DS3231-library to 
+// quickly send time and date information over a serial link
+//
+// To use the hardware I2C (TWI) interface of the Arduino you must connect
+// the pins as follows:
+//
+// Arduino Uno/2009:
+// ----------------------
+// DS3231:  SDA pin   -> Arduino Analog 4 or the dedicated SDA pin
+//          SCL pin   -> Arduino Analog 5 or the dedicated SCL pin
+//
+// Arduino Leonardo:
+// ----------------------
+// DS3231:  SDA pin   -> Arduino Digital 2 or the dedicated SDA pin
+//          SCL pin   -> Arduino Digital 3 or the dedicated SCL pin
+//
+// Arduino Mega:
+// ----------------------
+// DS3231:  SDA pin   -> Arduino Digital 20 (SDA) or the dedicated SDA pin
+//          SCL pin   -> Arduino Digital 21 (SCL) or the dedicated SCL pin
+//
+// Arduino Due:
+// ----------------------
+// DS3231:  SDA pin   -> Arduino Digital 20 (SDA) or the dedicated SDA1 (Digital 70) pin
+//          SCL pin   -> Arduino Digital 21 (SCL) or the dedicated SCL1 (Digital 71) pin
+//
+// The internal pull-up resistors will be activated when using the 
+// hardware I2C interfaces.
+//
+// You can connect the DS3231 to any available pin but if you use any
+// other than what is described above the library will fall back to
+// a software-based, TWI-like protocol which will require exclusive access 
+// to the pins used, and you will also have to use appropriate, external
+// pull-up resistors on the data and clock signals.
+
+
+//#include <DS3231.h>
+//
+//// Init the DS3231 using the hardware interface
+//DS3231  rtc(SDA, SCL);
+//
+//void setup()
+//{
+//  // Setup Serial connection
+//  Serial.begin(9600);
+//  // Uncomment the next line if you are using an Arduino Leonardo
+//  //while (!Serial) {}
+//  Serial.println("Hello");
+//  // Initialize the rtc object
+//  rtc.begin();
+//  
+//  // The following lines can be uncommented to set the date and time
+//  //rtc.setDOW(WEDNESDAY);     // Set Day-of-Week to SUNDAY
+//  //rtc.setTime(12, 0, 0);     // Set the time to 12:00:00 (24hr format)
+//  //rtc.setDate(1, 1, 2014);   // Set the date to January 1st, 2014
+//}
+//
+//void loop()
+//{
+//  // Send Day-of-Week
+//  Serial.print(rtc.getDOWStr());
+//  Serial.print(" ");
+//  
+//  // Send date
+//  Serial.print(rtc.getDateStr());
+//  Serial.print(" -- ");
+//
+//  // Send time
+//  Serial.println(rtc.getTimeStr());
+//  
+//  // Wait one second before repeating :)
+//  delay (1000);
+//}

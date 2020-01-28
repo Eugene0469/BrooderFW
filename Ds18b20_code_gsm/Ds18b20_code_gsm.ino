@@ -5,7 +5,6 @@
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h> //including software serial library
 #include <DS3231.h>
-#include <Adafruit_FONA.h>
 
 #define DHTPIN 9     // Digital pin connected to the DHT sensor
 #define DHTPIN_1 8     // Digital pin connected to the DHT sensor
@@ -13,18 +12,8 @@
 
 #define FONA_RX 6
 #define FONA_TX 5
-#define FONA_RST 7
 
 SoftwareSerial sim800l(FONA_TX, FONA_RX); // create a constructor of SoftwareSerial
-Adafruit_FONA SIM800 = Adafruit_FONA(FONA_RST);
-
-int8_t net_status;
-String response = "";
-char buffer[512];
-char url_string[] = "api.thingspeak.com/update?api_key=MVEE68WLO22F1PQ3&field1";
-
-boolean gprs_on = false;
-boolean tcp_on = false;
 
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
 
@@ -45,7 +34,8 @@ static float hum[3];
 DS3231  rtc(SDA, SCL);
 
 int count=0;
-#define relayPin  7
+
+#define relayPin  8
 
 void setup() {
   // put your setup code here, to run once:
@@ -98,43 +88,10 @@ void setup() {
   
   // SIM800L GSM Module Initialization
   sim800l.begin(9600);   // Setting the baud rate of GSM Module  
-  if (! SIM800.begin(sim800l)) {            
-    Serial.println("Couldn't find SIM800L");
-    while (1);
-  }
-  
-  Serial.println("SIM800L is OK"); 
-  delay(1000);
-  
-  Serial.println("Waiting to be registered to network...");
-  net_status = SIM800.getNetworkStatus();
-  while(net_status != 1){
-     net_status = SIM800.getNetworkStatus();
-     delay(2000);
-  }
-  Serial.println("Registered to home network!");
 
-  Serial.print("Turning on GPRS... ");
-  delay(2000); 
-  while(!gprs_on){
-    if (!SIM800.enableGPRS(true)){  
-        Serial.println("Failed to turn on GPRS");
-        Serial.println("Trying again...");
-        delay(2000);
-        gprs_on = false;
-    }else{
-        Serial.println("GPRS now turned on");
-        delay(2000);
-        gprs_on = true;   
-    } 
-  }
-
-  Serial.println("Configuring Text Mode...");
-  sim800l.println("AT+CMGF=1"); // Configuring TEXT mode
-  delay(1000);
-  sim800l.println("AT+CNMI=1,2,0,0,0"); // Decides how newly arrived SMS
-  delay(1000);
-  sim800l.println("AT+CMGL=\"REC UNREAD\""); // Read Unread Messages
+  modem_init();
+  data_init();
+  internet_init();
 
   pinMode(relayPin, OUTPUT);
 }
@@ -170,9 +127,9 @@ void printData(DeviceAddress deviceAddress)
 
 void loop() {
   // put your main code here, to run repeatedly:
-//  readTemp();
-//  readHumidityValue();
-//  readHumidityValue_1();
+  readTemp();
+  readHumidityValue();
+  readHumidityValue_1();
   sendValuesToThingSpeak();
 //  extractorFanCtrl();
 //  readTextMessage();
@@ -352,73 +309,28 @@ void SendTextMessage()
 
 void sendValuesToThingSpeak()
 {
-  char http_cmd[80];
-//  double atm_pressure = 0;
-//  char atm_pressure_string[200];
-  uint16_t statuscode;
-  int16_t length;
-
-  char t0[100],t1[100],t2[100],t3[100],t4[100];
-//  char h0[50],h1[50];
-
   float tp[5]={20.256,58.256,14.256,96.254,37.845};
-//  char t0[100];
-  dtostrf(tp[0], 2, 3, t0);
-  dtostrf(tp[1], 2, 3, t1);
-  dtostrf(tp[2], 2, 3, t2);
-  dtostrf(tp[3], 2, 3, t3);
-  dtostrf(tp[4], 2, 3, t4);
-//  for(int k=0; k<5;k++)
-//  {
-//    if(tp[k] != -127.00)
-//    {
-//      if(k==0)dtostrf(tp[k], 2, 3, t0);
-//        else if(k==1)dtostrf(tp[k], 2, 3, t1);
-//          else if(k==2)dtostrf(tp[k], 2, 3, t2);
-//            else if(k==3)dtostrf(tp[k], 2, 3, t3);
-//              else if(k==4)dtostrf(tp[k], 2, 3, t4);
-//    }
-//  }
-//  for(int k=0; k<2;k++)
-//  {
-//    if(!isnan(hum[k]))
-//    {
-//      if(k==0)dtostrf(hum[k], 2, 3, h0);
-//        else if(k==1)dtostrf(hum[k], 2, 3, h1);
-//    }
-//  }
-      
-
-  sprintf(http_cmd,"%s=%s",url_string,t0);
-  
-//  atm_pressure= (double)rand();  
-//  dtostrf(atm_pressure, 2, 3, atm_pressure_string);
-//  sprintf(http_cmd,"%s=%s",url_string,atm_pressure_string);
-  Serial.println(http_cmd);
-  delay(2000);
-  while(!tcp_on){
-    if (!SIM800.HTTP_GET_start(http_cmd, &statuscode, (uint16_t *)&length)) {
-         Serial.println("Failed!");
-         Serial.println("Trying again...");
-         tcp_on = false;
-    }else{
-      tcp_on = true;
-      while (length > 0) {
-         while (SIM800.available()) {
-           char c = SIM800.read();
-           response += c;
-           length--;
-         }
-      }
-      Serial.println(response);
-      if(statuscode == 200){
-        Serial.println("Success!");
-      }
-    }
-    delay(2000);
-  }
-  tcp_on = false;
-  delay(2000);
+  sim800l.print("AT+HTTPPARA=");
+  sim800l.print('"');
+  sim800l.print("URL");
+  sim800l.print('"');
+  sim800l.print(',');
+  sim800l.print('"');
+  sim800l.print("http:");
+  sim800l.print('/');
+  sim800l.print('/');
+  //-----------------------Your API Key Here----------------------//
+  //Replace xxxxxxxxxxx with your write API key.
+  sim800l.print("api.thingspeak.com/update?api_key=MVEE68WLO22F1PQ3&field1="); 
+  //---------------------------------------------------------------//
+  sim800l.print(tp[0]); //>>>>>>  variable 1 (temperature)
+  sim800l.print("&field2=");
+  sim800l.print(tp[1]); //>>>>>> variable 2 (Humidity)
+  sim800l.write(0x0d);
+  sim800l.write(0x0a);
+  delay(1000);
+  sim800l.println("AT+HTTPACTION=0");
+  delay(1000);
 }
 
 //void readTextMessage(){
@@ -468,4 +380,96 @@ void sendAlert(){
   {
     count=0;
   }
+}
+void modem_init()
+{
+  Serial.println("Please wait.....");
+  while(!sim800l.available())
+  {
+    sim800l.println("AT");
+    delay(1000);
+    Serial.println("Connecting...");    
+  }
+  Serial.println("Connected!"); 
+  sim800l.println("AT+CMGF=1");
+  delay(1000);
+  sim800l.println("AT+CNMI=2,2,0,0,0");
+  delay(1000);
+}
+
+void data_init()
+{
+  Serial.println("Please wait.....");
+  sim800l.println("AT");
+  delay(1000); delay(1000);
+  sim800l.println("AT+CPIN?");
+  delay(1000); delay(1000);
+  sim800l.print("AT+SAPBR=3,1");
+  sim800l.write(',');
+  sim800l.write('"');
+  sim800l.print("contype");
+  sim800l.write('"');
+  sim800l.write(',');
+  sim800l.write('"');
+  sim800l.print("GPRS");
+  sim800l.write('"');
+  sim800l.write(0x0d);
+  sim800l.write(0x0a);
+  delay(1000); ;
+  sim800l.print("AT+SAPBR=3,1");
+  sim800l.write(',');
+  sim800l.write('"');
+  sim800l.print("APN");
+  sim800l.write('"');
+  sim800l.write(',');
+  sim800l.write('"');
+  //------------APN------------//
+  sim800l.print("safaricom"); //APN Here
+  //--------------------------//
+  sim800l.write('"');
+  sim800l.write(0x0d);
+  sim800l.write(0x0a);
+  delay(1000);
+  sim800l.print("AT+SAPBR=3,1");
+  sim800l.write(',');
+  sim800l.write('"');
+  sim800l.print("USER");
+  sim800l.write('"');
+  sim800l.write(',');
+  sim800l.write('"');
+  sim800l.print("  ");
+  sim800l.write('"');
+  sim800l.write(0x0d);
+  sim800l.write(0x0a);
+  delay(1000);
+  sim800l.print("AT+SAPBR=3,1");
+  sim800l.write(',');
+  sim800l.write('"');
+  sim800l.print("PWD");
+  sim800l.write('"');
+  sim800l.write(',');
+  sim800l.write('"');
+  sim800l.print("  ");
+  sim800l.write('"');
+  sim800l.write(0x0d);
+  sim800l.write(0x0a);
+  delay(2000);
+  sim800l.print("AT+SAPBR=1,1");
+  sim800l.write(0x0d);
+  sim800l.write(0x0a);
+  delay(3000);
+}
+void internet_init()
+{
+  Serial.println("Please wait.....");
+  delay(1000);
+  sim800l.println("AT+HTTPINIT");
+  delay(1000); delay(1000);
+  sim800l.print("AT+HTTPPARA=");
+  sim800l.print('"');
+  sim800l.print("CID");
+  sim800l.print('"');
+  sim800l.print(',');
+  sim800l.println('1');
+  delay(1000);
 }
