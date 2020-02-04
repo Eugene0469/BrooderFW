@@ -45,7 +45,7 @@ static float hum[3];
 
 DS3231  rtc(SDA, SCL);
 
-int count=0;
+int count=0, countTwo=0;
 
 #define relayPin  8
 
@@ -136,7 +136,8 @@ void setup() {
   sim800l.println("AT+CNMI=1,2,0,0,0"); // Decides how newly arrived SMS
   delay(1000);
    sim800l.println("AT+CMGL=\"REC UNREAD\""); // Read Unread Messages
-//  SystemInit();
+  SystemInit();
+  delay(2000);
   
   pinMode(relayPin, OUTPUT);
 }
@@ -306,6 +307,18 @@ void ClientRequest()
 //  SendTextMessage();
   
 }
+
+void ClientTwoRequest()
+{
+  Serial.println("Sending Text...");
+  sim800l.print("AT+CMGF=1\n"); // Set the shield to SMS mode
+  delay(1000);
+  sim800l.print("AT+CMGS=\"+254711225240\"\n");  
+  delay(1000);
+  SendTextMessage();
+  delay(10000);
+}
+
 void SystemCheck()
 {
     Serial.println("Sending Text...");
@@ -373,6 +386,12 @@ void readTextMessage()
       // inputString ="";  
    }
 
+   if (inputString.indexOf("REQUEST") > -1)
+   {
+      ClientTwoRequest();
+      // inputString ="";  
+   }
+
    delay(2000);
    //Delete Messages & Save Memory
    if (inputString.indexOf("OK") == -1)
@@ -400,4 +419,14 @@ void sendAlert(){
   {
     count=0;
   }
+  if (rem==5 && countTwo==0)
+  {
+    ClientTwoRequest();
+    countTwo++;
+  }
+  else if(rem>5)
+  {
+    countTwo=0;
+  }
+  
 }
