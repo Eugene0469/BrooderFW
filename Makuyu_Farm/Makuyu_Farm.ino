@@ -1,11 +1,12 @@
-#include "DHT.h"
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
+//#include "DHT.h"
+//#include <Wire.h> 
+//#include <LiquidCrystal_I2C.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h> //including software serial library
 #include <DS3231.h>
 // #include <Adafruit_FONA.h>
+#include <LiquidCrystal.h>
 
 #define DHTPIN 9     // Digital pin connected to the DHT sensor
 #define DHTPIN_1 8     // Digital pin connected to the DHT sensor
@@ -27,7 +28,9 @@ SoftwareSerial sim800l(FONA_TX, FONA_RX); // create a constructor of SoftwareSer
 // boolean gprs_on = false;
 // boolean tcp_on = false;
 
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+//LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 #define ONE_WIRE_BUS A0 // Data wire is plugged into port 9 on the Arduino
 #define precision 12 // OneWire precision Dallas Sensor
@@ -39,15 +42,15 @@ DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Tem
 DeviceAddress T[NUM_OF_SENSORS]; // arrays to hold device addresses
 float temp[NUM_OF_SENSORS];
 
-DHT dht(DHTPIN, DHTTYPE);
-DHT dht_1(DHTPIN_1, DHTTYPE);
-static float hum[3];
+//DHT dht(DHTPIN, DHTTYPE);
+//DHT dht_1(DHTPIN_1, DHTTYPE);
+//static float hum[3];
 
 DS3231  rtc(SDA, SCL);
 
 int count=0, countTwo=0;
 
-#define relayPin  8
+//#define relayPin  8
 
 void SystemInit()      //Function to Send Message
 {
@@ -73,9 +76,9 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   lcd.begin(20, 4);
-  lcd.backlight();//To Power ON the back light
-  dht.begin();
-  dht_1.begin();
+//  lcd.backlight();//To Power ON the back light
+//  dht.begin();
+//  dht_1.begin();
   rtc.begin();
 
   Serial.println("Dallas Temperature IC Control Library");
@@ -139,7 +142,7 @@ void setup() {
   SystemInit();
   delay(2000);
   
-  pinMode(relayPin, OUTPUT);
+//  pinMode(relayPin, OUTPUT);
 }
 
 // function to print a device address
@@ -178,14 +181,14 @@ void loop() {
 //  lcd.clear();
   // sendValuesToThingSpeak();
   //  extractorFanCtrl();
+  readTemp();
+//  readHumidityValue();
+//  readHumidityValue_1();
   if(sim800l.available())
   {
     delay(1000);
     readTextMessage();
   }
-  readTemp();
-  readHumidityValue();
-  readHumidityValue_1();
   sendAlert();
 }
 
@@ -203,99 +206,99 @@ void readTemp(){
     temp[i] = sensors.getTempC(T[i]);
     if(temp[i] != -127.00)
     {
-      lcd.setCursor(0,0);
+      lcd.setCursor(0,i);
       lcd.print("Zone ");
       lcd.print(i+1);
       lcd.print(": ");
       lcd.print(temp[i]); lcd.write((char)223); lcd.print("C "); 
-      i++;
-      if(i == sensors.getDeviceCount())break;
-      temp[i] = sensors.getTempC(T[i]);
-      if(temp[i] != -127.00)
-      { 
-        lcd.setCursor(0,1);
-        lcd.print("Zone ");
-        lcd.print(i+1);
-        lcd.print(": ");
-        lcd.print(temp[i]); lcd.write((char)223); lcd.print("C ");  
-      }
-      delay(2000);
+//      i++;
+//      if(i == sensors.getDeviceCount())break;
+//      temp[i] = sensors.getTempC(T[i]);
+//      if(temp[i] != -127.00)
+//      { 
+//        lcd.setCursor(0,1);
+//        lcd.print("Zone ");
+//        lcd.print(i+1);
+//        lcd.print(": ");
+//        lcd.print(temp[i]); lcd.write((char)223); lcd.print("C ");  
+//      }
+//      delay(2000);
     } 
   }
 }
 
-void readHumidityValue(){
-    // Wait a few seconds between measurements.
-  delay(2000);
-  //  lcd.setCursor(0,3);
-  //  lcd.print("                ");
-  // Reading temperature or humidity takes about 250 milliseconds!
-  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-  hum[0] = dht.readHumidity();
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(hum[0])) {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return;
-  }
+//void readHumidityValue(){
+//    // Wait a few seconds between measurements.
+//  delay(2000);
+//  //  lcd.setCursor(0,3);
+//  //  lcd.print("                ");
+//  // Reading temperature or humidity takes about 250 milliseconds!
+//  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+//  hum[0] = dht.readHumidity();
+//  // Check if any reads failed and exit early (to try again).
+//  if (isnan(hum[0])) {
+//    Serial.println(F("Failed to read from DHT sensor!"));
+//    return;
+//  }
+//
+//  if(!(isnan(hum[0])))
+//  {
+//    Serial.print(F("Humidity: "));
+//    Serial.print(hum[0]);
+//    Serial.println(F("%"));
+//    lcd.setCursor(0,2);
+//    lcd.print("Hum 1 : ");
+//    lcd.print(hum[0]);
+//    lcd.print("% ");
+//  }
+//}
+//
+//void readHumidityValue_1(){
+//    // Wait a few seconds between measurements.
+//  delay(2000);
+//  //  lcd.setCursor(0,3);
+//  //  lcd.print("                ");
+//    // Reading temperature or humidity takes about 250 milliseconds!
+//    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+//    hum[1] = dht_1.readHumidity();
+//  // Check if any reads failed and exit early (to try again).
+//  if (isnan(hum[1])) {
+//    Serial.println(F("Failed to read from DHT_1 sensor!"));
+//    return;
+//  }
+//  if(!(isnan(hum[1])))
+//  {
+//    Serial.print(F("Humidity_1: "));
+//    Serial.print(hum[1]);
+//    Serial.println(F("%"));
+//    lcd.setCursor(0,3);
+//    lcd.print("Hum 2 : ");
+//    lcd.print(hum[1]);
+//    lcd.print("% ");
+//  }
+//
+//}
 
-  if(!(isnan(hum[0])))
-  {
-    Serial.print(F("Humidity: "));
-    Serial.print(hum[0]);
-    Serial.println(F("%"));
-    lcd.setCursor(0,2);
-    lcd.print("Hum 1 : ");
-    lcd.print(hum[0]);
-    lcd.print("% ");
-  }
-}
-
-void readHumidityValue_1(){
-    // Wait a few seconds between measurements.
-  delay(2000);
-  //  lcd.setCursor(0,3);
-  //  lcd.print("                ");
-    // Reading temperature or humidity takes about 250 milliseconds!
-    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    hum[1] = dht_1.readHumidity();
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(hum[1])) {
-    Serial.println(F("Failed to read from DHT_1 sensor!"));
-    return;
-  }
-  if(!(isnan(hum[1])))
-  {
-    Serial.print(F("Humidity_1: "));
-    Serial.print(hum[1]);
-    Serial.println(F("%"));
-    lcd.setCursor(0,3);
-    lcd.print("Hum 2 : ");
-    lcd.print(hum[1]);
-    lcd.print("% ");
-  }
-
-}
-
-void extractorFanCtrl()
-{
-  int ave_hum = 0;
-  ave_hum = (hum[0]+hum[1])/2;
-  if(ave_hum >= 80)
-  {
-    digitalWrite(relayPin, LOW); //The relay module is active low
-  }
-  else if (ave_hum <= 60)
-  {
-    digitalWrite(relayPin, HIGH);
-  }
-}
+//void extractorFanCtrl()
+//{
+//  int ave_hum = 0;
+//  ave_hum = (hum[0]+hum[1])/2;
+//  if(ave_hum >= 80)
+//  {
+//    digitalWrite(relayPin, LOW); //The relay module is active low
+//  }
+//  else if (ave_hum <= 60)
+//  {
+//    digitalWrite(relayPin, HIGH);
+//  }
+//}
 
 void ClientRequest()
 {
   Serial.println("Sending Text...");
   sim800l.print("AT+CMGF=1\n"); // Set the shield to SMS mode
   delay(1000);
-  sim800l.print("AT+CMGS=\"+254710781496\"\n");  
+  sim800l.print("AT+CMGS=\"+254726360279\"\n");  
   delay(1000);
   SendTextMessage();
   delay(10000);
@@ -313,7 +316,7 @@ void ClientTwoRequest()
   Serial.println("Sending Text...");
   sim800l.print("AT+CMGF=1\n"); // Set the shield to SMS mode
   delay(1000);
-  sim800l.print("AT+CMGS=\"+254711225240\"\n");  
+  sim800l.print("AT+CMGS=\"+254722729766\"\n");  
   delay(1000);
   SendTextMessage();
   delay(10000);
@@ -344,16 +347,16 @@ void SendTextMessage()
       sim800l.print(" Celsius\n");
     } 
   }
-  if (!(isnan(hum[0]))) {
-    sim800l.print("Humidity 1: "); //the content of the message
-    sim800l.print(hum[0]); //the content of the message
-    sim800l.println("%");
-  }
-  if (!(isnan(hum[1]))) {
-   sim800l.print("Humidity 2: "); //the content of the message
-   sim800l.print(hum[1]); //the content of the message     
-   sim800l.println("%");
-  }
+//  if (!(isnan(hum[0]))) {
+//    sim800l.print("Humidity 1: "); //the content of the message
+//    sim800l.print(hum[0]); //the content of the message
+//    sim800l.println("%");
+//  }
+//  if (!(isnan(hum[1]))) {
+//   sim800l.print("Humidity 2: "); //the content of the message
+//   sim800l.print(hum[1]); //the content of the message     
+//   sim800l.println("%");
+//  }
   sim800l.print("\n"); 
   delay(1000);
   sim800l.print((char)26);//the ASCII code of the ctrl+z is 26 (required according to the datasheet)
@@ -419,14 +422,6 @@ void sendAlert(){
   {
     count=0;
   }
-  if (rem==5 && countTwo==0)
-  {
-    ClientTwoRequest();
-    countTwo++;
-  }
-  else if(rem>5)
-  {
-    countTwo=0;
-  }
+//B 
   
 }
