@@ -1,12 +1,12 @@
 //#include <LiquidCrystal.h>
 //const int rs = 23, en = 25, d4 = 27, d5 = 29, d6 = 31, d7 = 33;
 //LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-#include <LiquidCrystal_I2C.h>
+//#include <LiquidCrystal_I2C.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <Wire.h> 
+//#include <Wire.h> 
 
-#define ONE_WIRE_BUS A0 // Data wire is plugged into port 9 on the Arduino
+#define ONE_WIRE_BUS PB13 // Data wire is plugged into port 9 on the Arduino
 #define precision 12 // OneWire precision Dallas Sensor
 #define NUM_OF_SENSORS 9 //Number of connected sensors
 int sen_number = 0; // Counter of Dallas sensors
@@ -17,13 +17,13 @@ DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Tem
 DeviceAddress T[NUM_OF_SENSORS]; // arrays to hold device addresses
 float temp[NUM_OF_SENSORS];
 
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+//LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
 
 void setup(void)
 {
 //  lcd.begin(20,4);
-  lcd.begin(20, 4);
-  lcd.backlight();//To Power ON the back light
+//  lcd.begin(20, 4);
+//  lcd.backlight();//To Power ON the back light
   Serial.begin(9600); //Start serial port
   Serial.println("Dallas Temperature IC Control Library");
   // Start up the library
@@ -107,21 +107,21 @@ void loop(void)
     printData(T[k]);
   }
 
-  for(int i = 0; i<sensors.getDeviceCount(); i++)
-  {
-    temp[i] = sensors.getTempC(T[i]);
-    if(temp[i] != -127.00)
-    {
-      lcd.setCursor(0,i);
-      lcd.print("Zone ");
-      lcd.print(i+1);
-//      lcd.setCursor(0,1);
-      lcd.print(": ");
-      lcd.print(temp[i]); lcd.write((char)223); lcd.print("C "); 
-//      delay(1200);     
-    }  
-    delay(1000);
-  }
+//  for(int i = 0; i<sensors.getDeviceCount(); i++)
+//  {
+//    temp[i] = sensors.getTempC(T[i]);
+//    if(temp[i] != -127.00)
+//    {
+//      lcd.setCursor(0,i);
+//      lcd.print("Zone ");
+//      lcd.print(i+1);
+////      lcd.setCursor(0,1);
+//      lcd.print(": ");
+//      lcd.print(temp[i]); lcd.write((char)223); lcd.print("C "); 
+////      delay(1200);     
+//    }  
+//    delay(1000);
+//  }
   }
 // DS3231_Serial_Easy
 // Copyright (C)2015 Rinky-Dink Electronics, Henning Karlsen. All right reserved
