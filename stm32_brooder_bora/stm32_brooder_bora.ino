@@ -4,10 +4,10 @@
 #include "Wire.h"
 #include <LiquidCrystal_I2C.h>
 
-#define DS18B20     0
-#define DHT22       0
-#define LCD_I2C     0
-#define SIM800L     0
+#define DS18B20     1
+#define DHT22       1
+#define LCD_I2C     1
+#define SIM800L     1
 
 #if DS18B20
     #define ONE_WIRE_BUS PB12 // Data wire is plugged into port PB13 on the Blue Pill
@@ -17,7 +17,7 @@
     OneWire oneWire(ONE_WIRE_BUS);
     DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Temperature.
     DeviceAddress T[NUM_OF_SENSORS]; // arrays to hold device addresses
-    float temp[NUM_OF_SENSORS];
+    float temp[NUM_OF_SENSORS] = {0.0f};
 #endif
 
 #if DHT22
@@ -142,12 +142,14 @@ void setup()
 void loop()
 {
   #if DS18B20
+      float temp_local[NUM_OF_SENSORS] = {0.0f};
       sensors.requestTemperatures();
       for (int i = 0; i < sensors.getDeviceCount(); i++)
       {
-        temp[i] = sensors.getTempC(T[i]);
-        if (temp[i] != -127.00f)
+        temp_local[i] = sensors.getTempC(T[i]);
+        if (temp_local[i] != -127.00f)
         {
+          temp[i] = temp_local[i];
           Serial.print("Zone ");
           Serial.print(i + 1);
           Serial.print(": ");
