@@ -1,3 +1,4 @@
+
 #include <DHT.h>                    //Library for using DHT sensor 
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -5,9 +6,9 @@
 #include <LiquidCrystal_I2C.h>
 
 #define DS18B20     1
-#define DHT22       1
+#define DHT22       0
 #define LCD_I2C     1
-#define SIM800L     1
+#define SIM800L     0
 
 #if DS18B20
     #define ONE_WIRE_BUS PB12 // Data wire is plugged into port PB13 on the Blue Pill
@@ -70,6 +71,7 @@ int count = 0, countTwo = 0;
 
 void setup()
 {
+  delay(5000);
   #if LCD_I2C
       lcd.begin();
       lcd.backlight();//To Power ON the back light
@@ -137,6 +139,8 @@ void setup()
   //  {
   //    Serial.write(Serial1.read());
   //  }
+  /*setDS3231time(int second, int minute, int hour, int dayOfWeek, int dayOfMonth, int month, int year(0-99))*/
+  setDS3231time(28, 51, 13, 7, 8, 8, 20);
 }
 
 void loop()
