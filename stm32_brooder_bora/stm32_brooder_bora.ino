@@ -7,7 +7,7 @@
 #include <LiquidCrystal_I2C.h>
 
 #define DS18B20_ENABLED     1
-#define DHT22_ENABLED       1
+#define DHT22_ENABLED       0
 #define LCD_I2C_ENABLED     1
 #define SIM800L_ENABLED     1
 #define RTC_ENABLED         1
@@ -285,7 +285,7 @@ void loop()
     Serial.println("Sending Text...");
     Serial1.print("AT+CMGF=1\n"); // Set the shield to SMS mode
     delay(1000);
-    Serial1.print("AT+CMGS=\"+254721460975\"\n");
+    Serial1.print("AT+CMGS=\"+254720958250\"\n");
     delay(1000);
     SendTextMessage();
   }
@@ -294,7 +294,7 @@ void loop()
     Serial.println("Sending Text...");
     Serial1.print("AT+CMGF=1\n"); // Set the shield to SMS mode
     delay(1000);
-    Serial1.print("AT+CMGS=\"+254721460975\"\n");
+    Serial1.print("AT+CMGS=\"+254743144455\"\n");
     delay(1000);
     SendTextMessage();
   }
